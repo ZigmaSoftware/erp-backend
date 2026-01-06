@@ -1,0 +1,9 @@
+asgiref
+Django
+djangorestframework
+mysqlclient
+psycopg2-binary
+python-decouple
+setuptools
+sqlparse
+wheel

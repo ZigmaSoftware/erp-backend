@@ -1,0 +1,124 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login Successful</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        pre { background: #f6f8fa; padding: 10px; border-radius: 4px; }
+        .token { word-break: break-all; }
+        .meta { margin-top: 1rem; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}!</h1>
+
+    <p>Login successful. Below are your tokens (keep them secret):</p>
+
+    <h3>Access Token (expires in {{ expires_in }}s)</h3>
+    <pre class="token">{{ access_token }}</pre>
+
+    <h3>Refresh Token</h3>
+    <pre class="token">{{ refresh_token }}</pre>
+
+    <div class="meta">
+        <p><a href="/admin/">Go to admin</a> · <a href="/api/auth/login_page/">Back to login</a></p>
+    </div>
+
+    <h3>Quick action</h3>
+    <p>
+        <button id="go-sites">Go To Sites (via API Gateway)</button>
+    </p>
+
+    <div id="sites-result" style="margin-top:1rem;">
+        <!-- results from gateway will appear here -->
+    </div>
+
+    <script>
+        // Use the access token to call the API Gateway and show the sites list
+        const ACCESS_TOKEN = "{{ access_token|escapejs }}";
+        // Try multiple gateway hostnames in dev to avoid origin/extension issues
+        const GATEWAY_BASES = [
+            'http://127.0.0.1:8000',
+            'http://localhost:8000',
+            'http://0.0.0.0:8000',
+        ];
+        const SITES_PATH = '/api/master/api/v1/masters/sites/';
+        const ECHO_PATH = '/api/debug/echo/';
+
+        async function tryFetch(url, options) {
+            try {
+                return { res: await fetch(url, options) };
+            } catch (err) {
+                return { err };
+            }
+        }
+
+        document.getElementById('go-sites').addEventListener('click', async function() {
+            const container = document.getElementById('sites-result');
+            container.innerHTML = '<em>Testing gateway reachability...</em>';
+
+            let usedBase = null;
+            let echoNoAuthResult = null;
+
+            // Find a reachable gateway base
+            for (const base of GATEWAY_BASES) {
+                echoNoAuthResult = await tryFetch(base + ECHO_PATH, { method: 'GET', credentials: 'omit' });
+                if (echoNoAuthResult.res) { usedBase = base; break; }
+            }
+
+            if (!usedBase) {
+                container.innerHTML = '<strong>Network error:</strong> could not reach API Gateway from your browser. This often indicates a browser extension (adblocker) blocked the request, or the origin is not allowed by CORS. Try disabling extensions or open the login page on <code>http://localhost:8001</code> instead of <code>127.0.0.1</code>.';
+                return;
+            }
+
+            // Echo with Authorization (preflight)
+            const echoAuthResult = await tryFetch(usedBase + ECHO_PATH, { method: 'GET', headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }, credentials: 'omit' });
+
+            // Sites call
+            const sitesResult = await tryFetch(usedBase + SITES_PATH, { method: 'GET', headers: { 'Authorization': 'Bearer ' + ACCESS_TOKEN }, credentials: 'omit' });
+
+            let out = '<h4>Gateway debug (using ' + usedBase + ')</h4>';
+
+            if (echoNoAuthResult.err) {
+                out += '<h5>1) Echo (no auth) — NETWORK ERROR</h5><pre>' + escapeHtml(String(echoNoAuthResult.err)) + '</pre>';
+            } else {
+                const text = await echoNoAuthResult.res.text();
+                out += '<h5>1) Echo (no auth) — status: ' + echoNoAuthResult.res.status + '</h5><pre>' + escapeHtml(text) + '</pre>';
+            }
+
+            if (echoAuthResult.err) {
+                out += '<h5>2) Echo (with Authorization) — NETWORK ERROR</h5><pre>' + escapeHtml(String(echoAuthResult.err)) + '</pre>';
+            } else {
+                const text = await echoAuthResult.res.text();
+                out += '<h5>2) Echo (with Authorization) — status: ' + echoAuthResult.res.status + '</h5><pre>' + escapeHtml(text) + '</pre>';
+            }
+
+            if (sitesResult.err) {
+                const errStr = String(sitesResult.err);
+                out += '<h5>3) Sites — NETWORK ERROR</h5><pre>' + escapeHtml(errStr) + '</pre>';
+                if (errStr.includes('Failed to fetch') || errStr.includes('ERR_BLOCKED_BY_CLIENT')) {
+                    out += '<p><strong>Likely cause:</strong> a browser extension blocked the request. Try disabling extensions or use an incognito window, or open the login page on <code>localhost</code> instead of <code>127.0.0.1</code>.</p>';
+                }
+            } else {
+                out += '<h5>3) Sites — status: ' + sitesResult.res.status + ' ' + sitesResult.res.statusText + '</h5>';
+                if (sitesResult.res.ok) {
+                    const data = await sitesResult.res.json();
+                    out += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    const text = await sitesResult.res.text();
+                    out += '<pre>' + escapeHtml(text) + '</pre>';
+                }
+            }
+
+            container.innerHTML = out;
+        });
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+        }
+    </script>
+</body>
+</html>
