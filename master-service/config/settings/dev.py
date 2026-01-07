@@ -8,8 +8,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "master_service_db",
-        "USER": "master",
-        "PASSWORD": "Su$i0410",
+        "USER": "root",
+        "PASSWORD": "admin@123",
         "HOST": "127.0.0.1",
         "PORT": "3306",
         "OPTIONS": {

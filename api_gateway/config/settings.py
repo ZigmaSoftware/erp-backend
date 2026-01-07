@@ -7,7 +7,7 @@ import sys
 # --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-COMMON_LIB = Path("/mnt/projects/Django_ERP/common_lib")
+COMMON_LIB = Path("/home/sathya/erp/erp-final-backend/common_lib")
 if str(COMMON_LIB) not in sys.path:
     sys.path.insert(0, str(COMMON_LIB))
 

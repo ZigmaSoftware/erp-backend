@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import sys
 
-COMMON_LIB = Path("/mnt/projects/Django_ERP/common_lib")
+COMMON_LIB = Path("/home/sathya/erp/erp-final-backend/common_lib")
 sys.path.insert(0, str(COMMON_LIB))
 
 # Build paths

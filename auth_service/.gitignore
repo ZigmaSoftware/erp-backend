@@ -6,8 +6,6 @@ venv/
 __pycache__/
 *.pyc
 
-# Keys & secrets
-keys/
 
 migrations/
 */migrations/
