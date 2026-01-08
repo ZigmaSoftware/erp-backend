@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser
 from rest_framework.authentication import BaseAuthentication
 
 
@@ -16,14 +15,20 @@ class RemoteUser:
 
 
 class GatewayHeaderAuthentication(BaseAuthentication):
-    """Authenticate requests asserted by an API gateway via headers.
+    """
+    Authenticate requests asserted by an API gateway via headers.
 
-    Looks for `HTTP_X_USER_ID` and `HTTP_X_USERNAME` and returns either the
-    matching local user or a `RemoteUser` object that marks the request as
-    authenticated.
+    Looks for:
+    - X-User-Id
+    - X-Username
+    - X-Groups
     """
 
     def authenticate(self, request):
+        # VERY IMPORTANT: allow CORS preflight requests
+        if request.method == "OPTIONS":
+            return None
+
         x_user = request.META.get("HTTP_X_USER_ID")
         if not x_user:
             return None
@@ -33,9 +38,17 @@ class GatewayHeaderAuthentication(BaseAuthentication):
         groups = [g for g in groups_header.split(",") if g]
 
         User = get_user_model()
+
         try:
             user = User.objects.get(id=int(x_user))
             return (user, None)
-        except Exception:
+        except User.DoesNotExist:
             # create lightweight authenticated principal
-            return (RemoteUser(id=x_user, username=username, groups=groups), None)
+            return (
+                RemoteUser(
+                    id=x_user,
+                    username=username,
+                    groups=groups,
+                ),
+                None,
+            )

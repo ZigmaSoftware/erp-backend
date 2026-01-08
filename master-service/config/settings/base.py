@@ -1,24 +1,13 @@
 from pathlib import Path
 import os
-import sys
-
+from corsheaders.defaults import default_headers
 
 # --------------------------------------------------
 # BASE DIR
 # --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-# __file__ = /home/sathya/erp/erp-final-backend/master_service/config/settings/base.py
-# .parent = /home/sathya/erp/erp-final-backend/master_service/config/settings/
-# .parent = /home/sathya/erp/erp-final-backend/master_service/config/
-# .parent = /home/sathya/erp/erp-final-backend/master_service/
-# BASE_DIR = /home/sathya/erp/erp-final-backend/master_service/
-
 PROJECT_ROOT = BASE_DIR.parent
-# .parent = /home/sathya/erp/erp-final-backend/
-# PROJECT_ROOT = /home/sathya/erp/erp-final-backend/
-
 COMMON_LIB = PROJECT_ROOT / "common_lib"
-# COMMON_LIB = /home/sathya/erp/erp-final-backend/common_lib/
 
 # --------------------------------------------------
 # SECURITY
@@ -35,7 +24,7 @@ ALLOWED_HOSTS = [
 # APPLICATIONS
 # --------------------------------------------------
 INSTALLED_APPS = [
-    "corsheaders",  # REQUIRED FOR CORS
+    "corsheaders",
 
     "django.contrib.admin",
     "django.contrib.auth",
@@ -51,7 +40,6 @@ INSTALLED_APPS = [
 
 # --------------------------------------------------
 # MIDDLEWARE
-# (NO JWT, NO TOKEN VALIDATION HERE)
 # --------------------------------------------------
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # MUST BE FIRST
@@ -60,7 +48,6 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
 
-    # KEEP ENABLED – SAFE (header-based auth, not cookies)
     "django.middleware.csrf.CsrfViewMiddleware",
 
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -93,19 +80,17 @@ TEMPLATES = [
 ]
 
 # --------------------------------------------------
-# DATABASE
+# DATABASE (default – overridden in dev.py)
 # --------------------------------------------------
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-        "CONN_MAX_AGE": 60,
     }
 }
 
 # --------------------------------------------------
 # PASSWORD VALIDATION
-# (Admin users only)
 # --------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -116,7 +101,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # --------------------------------------------------
 # DJANGO REST FRAMEWORK
-# (Gateway header auth FIRST)
 # --------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
@@ -127,22 +111,17 @@ REST_FRAMEWORK = {
 }
 
 # --------------------------------------------------
-# CORS SETTINGS
+# ✅ CORS SETTINGS (WORKING)
 # --------------------------------------------------
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = False
 
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "authorization",
-    "content-type",
-    "origin",
-    "x-csrftoken",
-    "x-requested-with",
-    "x-gateway-key",        # custom header support
-    "x-gateway-signature", # if used
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "x-user-id",
+    "x-username",
+    "x-groups",
+    "x-gateway-key",
+    "x-gateway-signature",
 ]
 
 CORS_ALLOW_METHODS = [
@@ -155,7 +134,7 @@ CORS_ALLOW_METHODS = [
 ]
 
 # --------------------------------------------------
-# CSRF TRUST (Frontend / Gateway)
+# CSRF
 # --------------------------------------------------
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",

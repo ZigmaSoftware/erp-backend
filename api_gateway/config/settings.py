@@ -40,7 +40,7 @@ JWT_SETTINGS = {
 
 JWT_PUBLIC_KEY_PATH = os.getenv(
     "JWT_PUBLIC_KEY_PATH",
-    "/mnt/projects/Django_ERP/auth_service/keys/dev_public.pem",
+    str(PROJECT_ROOT / "auth_service" / "keys" / "dev_public.pem"),
 )
 
 
@@ -71,6 +71,9 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8001",
     "http://0.0.0.0:8001",
     "http://0.0.0.0:8000",
+    # Allow frontend dev server origins
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = list(default_headers) + ["Authorization"]
