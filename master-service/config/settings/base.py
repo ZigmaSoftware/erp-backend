@@ -1,15 +1,35 @@
 from pathlib import Path
+import os
+import sys
 
 # --------------------------------------------------
-# Build paths
+# COMMON LIB PATH
+# --------------------------------------------------
+COMMON_LIB = Path("/home/sathya/erp/erp-final-backend/common_lib")
+sys.path.insert(0, str(COMMON_LIB))
+
+# --------------------------------------------------
+# BASE DIR
 # --------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+# --------------------------------------------------
+# SECURITY
+# --------------------------------------------------
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
+DEBUG = True
+
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+]
 
 # --------------------------------------------------
-# Application definition
+# APPLICATIONS
 # --------------------------------------------------
 INSTALLED_APPS = [
+    "corsheaders",  # REQUIRED FOR CORS
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -22,21 +42,24 @@ INSTALLED_APPS = [
     "apps.common_master",
 ]
 
-
 # --------------------------------------------------
-# Middleware
+# MIDDLEWARE
 # (NO JWT, NO TOKEN VALIDATION HERE)
 # --------------------------------------------------
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # MUST BE FIRST
+
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+
+    # KEEP ENABLED – SAFE (header-based auth, not cookies)
     "django.middleware.csrf.CsrfViewMiddleware",
+
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 # --------------------------------------------------
 # URL / WSGI
@@ -44,9 +67,8 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
 
-
 # --------------------------------------------------
-# Templates
+# TEMPLATES
 # --------------------------------------------------
 TEMPLATES = [
     {
@@ -63,10 +85,20 @@ TEMPLATES = [
     },
 ]
 
+# --------------------------------------------------
+# DATABASE
+# --------------------------------------------------
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+        "CONN_MAX_AGE": 60,
+    }
+}
 
 # --------------------------------------------------
-# Password validation
-# (Only relevant for admin users, fine to keep)
+# PASSWORD VALIDATION
+# (Admin users only)
 # --------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -75,38 +107,68 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# --------------------------------------------------
+# DJANGO REST FRAMEWORK
+# (Gateway header auth FIRST)
+# --------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.common_master.authentication.header_auth.GatewayHeaderAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+}
 
 # --------------------------------------------------
-# Internationalization
+# CORS SETTINGS
+# --------------------------------------------------
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "origin",
+    "x-csrftoken",
+    "x-requested-with",
+    "x-gateway-key",        # custom header support
+    "x-gateway-signature", # if used
+]
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+# --------------------------------------------------
+# CSRF TRUST (Frontend / Gateway)
+# --------------------------------------------------
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# --------------------------------------------------
+# INTERNATIONALIZATION
 # --------------------------------------------------
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-
 # --------------------------------------------------
-# Static files
+# STATIC FILES
 # --------------------------------------------------
 STATIC_URL = "/static/"
 
-
 # --------------------------------------------------
-# Database connection behaviour
-# --------------------------------------------------
-CONN_MAX_AGE = 60
-
-# REST Framework: trust gateway header authentication first
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'apps.common_master.authentication.header_auth.GatewayHeaderAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-    ],
-}
-
-
-# --------------------------------------------------
-# Default primary key field
+# DEFAULT FIELD
 # --------------------------------------------------
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
