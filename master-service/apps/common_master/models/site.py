@@ -9,8 +9,8 @@ class Site(BaseMaster):
     # Core Site & Location
     # -------------------------
     site_name = models.CharField(max_length=150)
-    state = models.CharField(max_length=100)
-    district = models.CharField(max_length=100)
+    state_id = models.CharField(max_length=100)
+    district_id = models.CharField(max_length=100)
     ulb = models.CharField(max_length=100)
     site_address = models.TextField()
     status = models.CharField(max_length=20)
@@ -85,14 +85,6 @@ class Site(BaseMaster):
     petty_cash = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     proposed_change = models.TextField(null=True, blank=True)
     remarks = models.TextField(null=True, blank=True)
-
-    # -------------------------
-    # Auto-generate unique_id
-    # -------------------------
-    def save(self, *args, **kwargs):
-        # if not self.unique_id:
-        #     self.unique_id = generate_site_id()
-        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.site_name
