@@ -1,7 +1,13 @@
 from django.db import models
 
 class BaseMaster(models.Model):
-    unique_id = models.CharField(max_length=40, unique=True)
+    unique_id = models.CharField(
+        max_length=40,
+        unique=True,
+        null=True,
+        default=None,
+        editable=False,
+    )
     is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
 
