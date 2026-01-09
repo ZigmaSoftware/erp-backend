@@ -1,21 +1,21 @@
-from rest_framework.viewsets import ModelViewSet
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.viewsets import ModelViewSet
 
-from apps.common_master.models.plant import Plant
-from apps.common_master.serializers.plant import PlantSerializer
+from apps.common_master.models.city import City
+from apps.common_master.serializers.city_serializer import CitySerializer
 
 
-class PlantViewSet(ModelViewSet):
+class CityViewSet(ModelViewSet):
     """
-    Plant Master API
-    ----------------
-    CRUD operations for Plant.
+    City Master API
+    --------------
+    CRUD operations for City.
     """
 
-    queryset = Plant.objects.filter(is_deleted=False)
-    serializer_class = PlantSerializer
+    queryset = City.objects.filter(is_deleted=False)
+    serializer_class = CitySerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "unique_id"
 
@@ -36,13 +36,13 @@ class PlantViewSet(ModelViewSet):
         )
 
     def destroy(self, request, *args, **kwargs):
-        plant = self.get_object()
-        plant.is_deleted = True
-        plant.is_active = False
-        plant.updated_by = (
+        city = self.get_object()
+        city.is_deleted = True
+        city.is_active = False
+        city.updated_by = (
             request.user.username
             if request.user.is_authenticated
             else None
         )
-        plant.save(update_fields=["is_deleted", "is_active", "updated_by"])
+        city.save(update_fields=["is_deleted", "is_active", "updated_by"])
         return Response(status=status.HTTP_204_NO_CONTENT)
