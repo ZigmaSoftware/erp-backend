@@ -5,6 +5,7 @@ from apps.common_master.validators.unique_name_validator import unique_name_vali
 
 
 class PlantSerializer(serializers.ModelSerializer):
+    site_name = serializers.CharField(source="site_id.site_name", read_only=True)
     class Meta:
         model = Plant
         fields = "__all__"
