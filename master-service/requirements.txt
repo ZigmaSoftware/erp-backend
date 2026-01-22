@@ -1,6 +1,7 @@
 asgiref
 Django
 djangorestframework
+drf-yasg
 mysqlclient
 psycopg2-binary
 python-decouple

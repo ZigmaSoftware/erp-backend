@@ -2,10 +2,15 @@ from django.http import JsonResponse
 from erp_jwt.decoder import decode_token, JWTExpiredError, JWTInvalidError
 
 
-EXCLUDED_PATHS = [
+EXACT_EXCLUDED_PATHS = {
     "/api/auth/login/",
     "/api/auth/refresh/",
-]
+}
+
+# Allow unauthenticated access to master-service API docs through the gateway.
+PREFIX_EXCLUDED_PATHS = (
+    "/api/master/api/docs/",
+)
 
 
 class JWTAuthenticationMiddleware:
@@ -14,7 +19,7 @@ class JWTAuthenticationMiddleware:
 
     def __call__(self, request):
         # Skip auth for excluded paths
-        if request.path in EXCLUDED_PATHS:
+        if request.path in EXACT_EXCLUDED_PATHS or request.path.startswith(PREFIX_EXCLUDED_PATHS):
             return self.get_response(request)
 
         auth_header = request.headers.get("Authorization")

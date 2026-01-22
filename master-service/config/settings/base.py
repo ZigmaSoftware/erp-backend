@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from corsheaders.defaults import default_headers
 
 # --------------------------------------------------
@@ -8,6 +9,10 @@ from corsheaders.defaults import default_headers
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 COMMON_LIB = PROJECT_ROOT / "common_lib"
+
+# Ensure common_lib is importable (for shared JWT utils, etc.)
+if str(COMMON_LIB) not in sys.path:
+    sys.path.insert(0, str(COMMON_LIB))
 
 # --------------------------------------------------
 # SECURITY
@@ -34,8 +39,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "rest_framework",
+    "drf_yasg",
 
     "apps.common_master",
+    "apps.em_master",
 ]
 
 # --------------------------------------------------
@@ -111,7 +118,37 @@ REST_FRAMEWORK = {
 }
 
 # --------------------------------------------------
-# ✅ CORS SETTINGS (WORKING)
+# JWT SETTINGS (used when validating bearer tokens directly)
+# --------------------------------------------------
+JWT_SETTINGS = {
+    "ALGORITHM": os.getenv("JWT_ALGORITHM", "RS256"),
+    "ISSUER": os.getenv("JWT_ISSUER", "auth_service"),
+}
+
+# Public key path for JWT verification (default to dev key alongside auth_service)
+JWT_PUBLIC_KEY_PATH = os.getenv(
+    "JWT_PUBLIC_KEY_PATH",
+    str(PROJECT_ROOT / "auth_service" / "keys" / "dev_public.pem"),
+)
+
+# --------------------------------------------------
+# SWAGGER / OPENAPI (drf-yasg)
+# --------------------------------------------------
+SWAGGER_SETTINGS = {
+    # Disable Session auth in the UI to avoid CSRF hassles; rely on Bearer/Basic headers instead.
+    "USE_SESSION_AUTH": False,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "Use: Bearer <access_token>",
+        },
+    },
+}
+
+# --------------------------------------------------
+# CORS SETTINGS (WORKING)
 # --------------------------------------------------
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = False
