@@ -16,8 +16,38 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework.permissions import AllowAny
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Master Service API",
+        default_version="v1",
+        description="Master and equipment master service schema.",
+    ),
+    public=True,
+    permission_classes=[AllowAny],
+    authentication_classes=[],
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path(
+        "api/docs/schema.json",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
+    ),
+    path(
+        "api/docs/swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path(
+        "api/docs/redoc/",
+        schema_view.with_ui("redoc", cache_timeout=0),
+        name="schema-redoc",
+    ),
     path("api/v1/masters/", include("apps.common_master.urls")),
+    path("api/v1/em-masters/", include("apps.em_master.urls")),
 ]
