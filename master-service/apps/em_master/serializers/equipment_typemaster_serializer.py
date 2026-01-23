@@ -23,5 +23,10 @@ class EquipmentTypeMasterSerializer(serializers.ModelSerializer):
         return unique_name_validator(
             Model=EquipmentTypeMaster,
             name_field="name",
-            scope_fields=["category"],
+            scope_fields=[],
         )(self, attrs)
+
+    def create(self, validated_data):
+        # Always start new records as active, ignoring client-supplied false values
+        validated_data["is_active"] = True
+        return super().create(validated_data)
