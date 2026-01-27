@@ -203,10 +203,17 @@ class TokenRefreshView(APIView):
         return Response(
             {
                 "access_token": access_token,
+                "refresh_token": refresh_token,
                 "expires_in": 3600,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "groups": list(user.groups.values_list("name", flat=True)),
+                },
             },
             status=status.HTTP_200_OK,
         )
+
 
     def post(self, request):
         refresh_token = request.data.get("refresh_token")
@@ -249,7 +256,13 @@ class TokenRefreshView(APIView):
         return Response(
             {
                 "access_token": access_token,
+                "refresh_token": refresh_token,
                 "expires_in": 3600,
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "groups": list(user.groups.values_list("name", flat=True)),
+                },
             },
             status=status.HTTP_200_OK,
         )
