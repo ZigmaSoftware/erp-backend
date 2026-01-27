@@ -14,28 +14,32 @@ class City(BaseMaster):
         Continent,
         on_delete=models.PROTECT,
         related_name="cities",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="continent_id",
     )
 
     country_id = models.ForeignKey(
         Country,
         on_delete=models.PROTECT,
         related_name="cities",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="country_id",
     )
 
     state_id = models.ForeignKey(
         State,
         on_delete=models.PROTECT,
         related_name="cities",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="state_id",
     )
 
     district_id = models.ForeignKey(
         District,
         on_delete=models.PROTECT,
         related_name="cities",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="district_id",
     )
 
     name = models.CharField(max_length=100)

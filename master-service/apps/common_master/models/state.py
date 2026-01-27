@@ -7,19 +7,21 @@ from .continent import Continent
 
 
 class State(BaseMaster):
+    
+    continent_id = models.ForeignKey(
+        Continent,
+        on_delete=models.PROTECT,
+        related_name="states",
+        to_field="unique_id",
+        db_column="continent_id",
+    )
 
     country_id = models.ForeignKey(
         Country,
         on_delete=models.PROTECT,
         related_name="states",
-        to_field="unique_id"
-    )
-
-    continent_id = models.ForeignKey(
-        Continent,
-        on_delete=models.PROTECT,
-        related_name="states",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="country_id",
     )
 
     name = models.CharField(max_length=100)

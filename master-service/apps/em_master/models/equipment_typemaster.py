@@ -11,7 +11,7 @@ class Category(models.TextChoices):
 
 
 def equipmentmastertype_upload_path(instance, filename):
-    return f"uploads/equipmentmastertype/{instance.unique_id}_{filename}"
+    return f"equipmentmastertype/{instance.unique_id}_{filename}"
 
 
 class EquipmentTypeMaster(BaseMaster):
