@@ -131,6 +131,10 @@ JWT_PUBLIC_KEY_PATH = os.getenv(
     str(PROJECT_ROOT / "auth_service" / "keys" / "dev_public.pem"),
 )
 
+MEDIA_URL = '/uploads/'
+MEDIA_ROOT = BASE_DIR / 'uploads'
+
+
 # --------------------------------------------------
 # SWAGGER / OPENAPI (drf-yasg)
 # --------------------------------------------------
