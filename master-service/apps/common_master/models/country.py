@@ -11,7 +11,8 @@ class Country(BaseMaster):
         Continent,
         on_delete=models.PROTECT,
         related_name="countries",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="continent_id",
     )
 
     name = models.CharField(max_length=100)
