@@ -4,6 +4,7 @@ from apps.common_master.views.debug import DebugHeadersView
 from apps.em_master.views.equipment_typemaster_viewset import EquipmentTypeMasterViewSet
 from apps.em_master.views.equipment_modelmaster_viewset import EquipmentModelMasterViewSet
 from apps.em_master.views.contractormaster_viewset import ContractorMasterViewSet
+from apps.em_master.views.vehicle_suppliermaster_viewset import VehicleSupplierMasterViewSet
 
 router = DefaultRouter()
 
@@ -13,6 +14,9 @@ router.register(
 )
 router.register(
     r"contractor-models", ContractorMasterViewSet, basename="constractor-model"
+)
+router.register(
+    r"vehicle-suppliers", VehicleSupplierMasterViewSet, basename="vehicle-supplier"
 )
 
 urlpatterns = router.urls + [
