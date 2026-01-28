@@ -7,23 +7,33 @@ from shared.base_models import BaseMaster
 from apps.em_master.models.utils.comfun import generate_unique_id
 
 
+class TransportType(models.TextChoices):
+    MACHINERY = "machinery", "Machinery"
+    TIPPER = "tipper", "Tipper"
+    GENSET = "genset", "Genset"
+    OTHERS = "others", "Others"
+
+
 class GstType(models.TextChoices):
     YES = "yes", "Yes"
     NO = "no", "No"
 
 
-class ContractorMaster(BaseMaster):
+def vehiclesuppliermaster_upload_path(instance, filename):
+    return f"vehiclesuppliermaster/{instance.unique_id}_{filename}"
 
-    contractor_code = models.CharField(
+
+class VehicleSupplierMaster(BaseMaster):
+
+    supplier_code = models.CharField(
         max_length=20,
         editable=False
     )
 
-    contractor_name = models.CharField(max_length=100)
-    contact_person = models.CharField(max_length=100)
+    supplier_name = models.CharField(max_length=100)
+    proprietor_name = models.CharField(max_length=100)
 
     mobile_no = models.CharField(max_length=10)
-    phone_no = models.CharField(max_length=10, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
 
     gst_type = models.CharField(
@@ -35,43 +45,46 @@ class ContractorMaster(BaseMaster):
 
     pan_no = models.CharField(max_length=10, blank=True, null=True)
 
-    opening_balance = models.DecimalField(max_digits=15, decimal_places=2)
+    transport_medium = models.CharField(
+        max_length=20, 
+        choices=TransportType.choices,
+        blank=True,
+        null=True
+    )
 
     address = models.JSONField()
     bank_details = models.JSONField(blank=True, null=True)
 
+    image = models.FileField(
+        upload_to=vehiclesuppliermaster_upload_path,
+        null=True,
+        blank=True
+    )
+
     class Meta:
-        ordering = ["contractor_name"]
+        ordering = ["supplier_name"]  
         constraints = [
             models.UniqueConstraint(
-                fields=["contractor_code"],
+                fields=["supplier_code"],
                 condition=Q(is_deleted=False),
-                name="uq_contractor_code_active"
+                name="uq_supplier_code_active"
             ),
             models.UniqueConstraint(
                 fields=["mobile_no"],
                 condition=Q(is_deleted=False),
-                name="uq_contractor_mobile_active"
-            ),
-            models.UniqueConstraint(
-                fields=["phone_no"],
-                condition=Q(is_deleted=False) & Q(phone_no__isnull=False),
-                name="uq_contractor_phone_active"
+                name="uq_supplier_mobile_active"
             ),
             models.UniqueConstraint(
                 fields=["email"],
                 condition=Q(is_deleted=False) & Q(email__isnull=False),
-                name="uq_contractor_email_active"
+                name="uq_supplier_email_active"
             ),
         ]
 
     def __str__(self):
-        return self.contractor_name
+        return self.supplier_name 
 
     def clean(self):
-        """
-        GST No is mandatory only if gst_type = YES
-        """
         if self.gst_type == GstType.YES and not self.gst_no:
             raise ValidationError(
                 {"gst_no": "GST number is required when GST type is Yes."}
@@ -81,17 +94,14 @@ class ContractorMaster(BaseMaster):
             self.gst_no = None
 
     def save(self, *args, **kwargs):
-        if not self.contractor_code:
+        if not self.supplier_code:  
             year = timezone.now().year
-            self.contractor_code = f"EM-{year}-{generate_unique_id()[:4].upper()}"
+            self.supplier_code = f"EM-{year}-{generate_unique_id()[:4].upper()}"
 
         self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        """
-        Soft delete
-        """
         self.is_deleted = True
         self.is_active = False
         self.save(update_fields=["is_deleted", "is_active"])
