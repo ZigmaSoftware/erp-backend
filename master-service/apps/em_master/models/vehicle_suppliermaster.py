@@ -52,8 +52,8 @@ class VehicleSupplierMaster(BaseMaster):
         null=True
     )
 
-    address = models.JSONField()
-    bank_details = models.JSONField(blank=True, null=True)
+    address = models.TextField()
+    bank_details = models.TextField(blank=True, null=True)
 
     image = models.FileField(
         upload_to=vehiclesuppliermaster_upload_path,
