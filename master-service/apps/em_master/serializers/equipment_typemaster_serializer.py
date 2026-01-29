@@ -6,6 +6,7 @@ from apps.em_master.validators.unique_name_validator import unique_name_validato
 
 class EquipmentTypeMasterSerializer(serializers.ModelSerializer):
     image = serializers.FileField(required=False, allow_null=True)
+    
 
     class Meta:
         model = EquipmentTypeMaster

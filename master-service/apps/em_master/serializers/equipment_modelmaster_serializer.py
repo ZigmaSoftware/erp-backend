@@ -5,6 +5,10 @@ from apps.em_master.validators.unique_name_validator import unique_name_validato
 
 
 class EquipmentModelMasterSerializer(serializers.ModelSerializer):
+    equipment_type_name = serializers.CharField(
+    source="equipment_type.name",
+    read_only=True
+)
 
     class Meta:
         model = EquipmentModelMaster
