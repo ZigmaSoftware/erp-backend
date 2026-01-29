@@ -37,8 +37,8 @@ class ContractorMaster(BaseMaster):
 
     opening_balance = models.DecimalField(max_digits=15, decimal_places=2)
 
-    address = models.JSONField()
-    bank_details = models.JSONField(blank=True, null=True)
+    address = models.TextField()
+    bank_details = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["contractor_name"]
