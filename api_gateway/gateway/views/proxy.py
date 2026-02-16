@@ -10,7 +10,7 @@ AUTH_SERVICE_BASE = "http://127.0.0.1:8001"
 
 class MasterServiceProxy(View):
     def dispatch(self, request, *args, **kwargs):
-        path = request.path.replace("/api/master/", "")
+        path = request.path.replace("/api/master-service/", "")
         url = f"{MASTER_SERVICE_BASE}/{path}"
 
         headers = {}
@@ -59,7 +59,7 @@ class MasterServiceProxy(View):
 
 class AuthServiceProxy(View):
     def dispatch(self, request, *args, **kwargs):
-        path = request.path.replace("/api/auth/", "")
+        path = request.path.replace("/api/auth-service/", "")
         url = f"{AUTH_SERVICE_BASE}/{path}"
 
         headers = {}

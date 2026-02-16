@@ -50,8 +50,8 @@ urlpatterns = [
         schema_view.with_ui("redoc", cache_timeout=0),
         name="schema-redoc",
     ),
-    path("api/v1/masters/", include("apps.common_master.urls")),
-    path("api/v1/em-masters/", include("apps.em_master.urls")),
+    path("v1/masters/", include("apps.common_master.urls")),
+    path("v1/em-masters/", include("apps.em_master.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
