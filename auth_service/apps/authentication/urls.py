@@ -17,9 +17,9 @@ from apps.authentication.views.user import UserViewSet
 
 # Router (same style as common_master)
 router = DefaultRouter()
-router.register(r"roles", UserRoleViewSet, basename="user-role")
-router.register(r"group-permissions", GroupPermissionViewSet, basename="group-permission")
-router.register(r"users", UserViewSet, basename="user")
+router.register(r"user-role", UserRoleViewSet, basename="user-roles")
+router.register(r"group-permission", GroupPermissionViewSet, basename="group-permissions")
+router.register(r"user-creation", UserViewSet, basename="user-creations")
 
 urlpatterns = router.urls + [
 
