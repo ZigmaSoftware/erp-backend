@@ -51,7 +51,7 @@ class LoginView(APIView):
         browser, os = parse_browser_os(user_agent)
 
         if not user:
-            # 🔒 Log failed attempt
+            #  Log failed attempt
             AuthAuditLog.objects.create(
                 user=None,
                 event_type="LOGIN_FAILED",
@@ -68,11 +68,11 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # ✅ Generate tokens
+        #  Generate tokens
         access_token = generate_access_token(user)
         refresh_token = generate_refresh_token(user)
 
-        # ✅ Log success
+        #  Log success
         AuthAuditLog.objects.create(
             user=user,
             event_type="LOGIN_SUCCESS",
