@@ -10,9 +10,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 PROJECT_ROOT = BASE_DIR.parent
 COMMON_LIB = PROJECT_ROOT / "common_lib"
 
-# Ensure common_lib is importable (for shared JWT utils, etc.)
-if str(COMMON_LIB) not in sys.path:
-    sys.path.insert(0, str(COMMON_LIB))
+# Ensure shared libraries are importable (common_lib + repo root).
+for extra_path in (COMMON_LIB, PROJECT_ROOT):
+    if str(extra_path) not in sys.path:
+        sys.path.insert(0, str(extra_path))
 
 # --------------------------------------------------
 # SECURITY
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
 
     "apps.common_master",
     "apps.em_master",
+    "auth_service.apps.authentication",
 ]
 
 # --------------------------------------------------
