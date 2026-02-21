@@ -12,8 +12,16 @@ A scalable, production-ready Enterprise Resource Planning (ERP) backend system b
 4. [Technologies Stack](#technologies-stack)
 5. [Coding Practices & Patterns](#coding-practices--patterns)
 6. [Authentication & Security](#authentication--security)
+   - [JWT Token Flow](#jwt-token-flow)
+   - [Role & Permission Management](#role--permission-management-)
+   - [Key Security Features](#key-security-features)
 7. [Project Structure](#project-structure)
 8. [Getting Started](#getting-started)
+9. [API Documentation Guide](#api-documentation-guide--swagger--redoc)
+10. [Logging & Monitoring](#logging--monitoring)
+11. [Contributing](#contributing)
+12. [Troubleshooting](#troubleshooting)
+13. [Future Enhancements](#future-enhancements)
 
 ---
 
@@ -113,16 +121,25 @@ This project follows a **Microservices Architecture** pattern with the following
 
 **Responsibilities**:
 - User login/authentication (API & HTML form)
-- JWT token generation (access & refresh)
-- Token refresh mechanism (configured, endpoint needs implementation)
+- JWT token generation (access & refresh) ✅ **WORKING**
+- Token refresh mechanism with validation ✅ **IMPLEMENTED**
 - Audit logging (login attempts, failures, successful logins) ✅ **WORKING**
 - User group management
 - Password hashing (PBKDF2-SHA256 with 120,000 iterations)
+- Role and permission management ✅ **NEW**
+- User-to-role assignment ✅ **NEW**
 
 **Key Components**:
 - `apps/authentication/views/auth.py` - Login endpoints (API & HTML form)
+- `apps/authentication/views/permission_and_role.py` - Role/permission endpoints ✅ **NEW**
+- `apps/authentication/views/user.py` - User management endpoints ✅ **ENHANCED**
 - `apps/authentication/services/audit_utils.py` - Security auditing (IP, User-Agent, Browser/OS detection)
+- `apps/authentication/services/token_service.py` - JWT token operations
 - `apps/authentication/models/audit.py` - Audit log model with event tracking
+- `apps/authentication/models/permissions.py` - Permission models (proxy, managed=False) ✅ **NEW**
+- `apps/authentication/models/user_role.py` - UserRole model ✅ **NEW**
+- `apps/authentication/models/user_profile.py` - User profile extension
+- `apps/authentication/serializers/permission_and_role.py` - Role/permission serializers ✅ **NEW**
 - `config/hashers.py` - PBKDF2-SHA256 password hasher with explicit iteration count
 
 **Database**: MySQL/MariaDB (`auth_service_db`)
@@ -136,6 +153,8 @@ This project follows a **Microservices Architecture** pattern with the following
 - User-Agent and browser/OS detection
 - Failed login attempt logging with metadata
 - Successful login tracking with user context
+- Role-based access control (RBAC) with granular permissions ✅ **NEW**
+- User-role mapping with inheritance ✅ **NEW**
 
 ---
 
@@ -817,9 +836,31 @@ python manage.py runserver
 
 ---
 
-### 10. **Documentation**
+### 10. **Documentation** ✅ **Interactive API Docs**
 
-**API Documentation with drf-yasg**:
+**API Documentation with drf-yasg (Swagger & ReDoc)**:
+
+The system provides **two powerful ways** to explore and understand the API:
+
+#### **Swagger UI - Interactive Testing** 🎯
+- Best for: Testing API endpoints directly from the browser
+- Features: Try-it-out button, request/response visualization, parameter exploration
+- Format: Human-friendly UI with interactive forms
+- Use case: Quick testing, learning endpoints, debugging
+
+#### **ReDoc - Beautiful Documentation** 📖
+- Best for: Reading comprehensive API documentation
+- Features: Clean, searchable, organized by tags, excellent for understanding specs
+- Format: Markdown-based, right-side response examples
+- Use case: Understanding API design, exploring data models, onboarding new developers
+- Why useful:
+  - ✅ Cleaner visual layout than Swagger
+  - ✅ Better for mobile/tablet viewing
+  - ✅ Excellent for learning API structure
+  - ✅ Searchable documentation
+  - ✅ Download OpenAPI spec option
+  - ✅ Perfect for sharing with non-technical stakeholders
+
 ```python
 # config/urls.py
 schema_view = get_schema_view(
@@ -833,12 +874,38 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path("api/docs/swagger/", schema_view.with_ui("swagger")),
-    path("api/docs/redoc/", schema_view.with_ui("redoc")),
+    path("api/docs/swagger/", schema_view.with_ui("swagger")),  # Interactive testing
+    path("api/docs/redoc/", schema_view.with_ui("redoc")),      # Beautiful docs
+    path("api/docs/schema.json", schema_view.without_ui(...)),   # Raw OpenAPI spec
 ]
 ```
 
-**Auto-generated OpenAPI schema** at `/api/docs/schema.json`
+**Available Endpoints** (All services):
+
+| Service | Swagger UI | ReDoc | OpenAPI Schema |
+|---------|-----------|-------|---|
+| **Auth Service** (8001) | [http://localhost:8001/swagger/](http://localhost:8001/swagger/) | [http://localhost:8001/redoc/](http://localhost:8001/redoc/) | [http://localhost:8001/swagger.json](http://localhost:8001/swagger.json) |
+| **Master Service** (8002) | [http://localhost:8002/api/docs/swagger/](http://localhost:8002/api/docs/swagger/) | [http://localhost:8002/api/docs/redoc/](http://localhost:8002/api/docs/redoc/) | [http://localhost:8002/api/docs/schema.json](http://localhost:8002/api/docs/schema.json) |
+| **API Gateway** (8000) | ⚠️ No docs | ⚠️ No docs | Routes to auth/master services |
+
+**Quick Links for Development**:
+```
+Authentication Service:
+  Swagger:  http://0.0.0.0:8001/swagger/ or http://127.0.0.1:8001/swagger/
+  ReDoc:    http://0.0.0.0:8001/redoc/ or http://127.0.0.1:8001/redoc/
+
+Master Data Service:
+  Swagger:  http://0.0.0.0:8002/api/docs/swagger/ or http://127.0.0.1:8002/api/docs/swagger/
+  ReDoc:    http://0.0.0.0:8002/api/docs/redoc/ or http://127.0.0.1:8002/api/docs/redoc/
+```
+
+**How to Use ReDoc for Documentation**:
+1. Open ReDoc in your browser
+2. Use the search feature (Ctrl+F) to find specific endpoints
+3. Click on endpoint to see full details: method, parameters, request body, response
+4. View request/response examples on the right side
+5. Understand data models and relationships
+6. Download/export OpenAPI specification for external tools
 
 ---
 
@@ -870,13 +937,14 @@ urlpatterns = [
    ├─ Extracts user context (id, username, groups)
    └─ Forwards to service with X-User-Id, X-Username, X-Groups headers
 
-4. Token Refresh (⚠️ Endpoint needs implementation)
-   ├─ POST /api/auth/refresh/ (NOT YET IMPLEMENTED)
-   ├─ Include Refresh Token in request
+4. Token Refresh ✅ **IMPLEMENTED**
+   ├─ POST /api/auth/refresh/ - Full implementation
+   ├─ GET /api/auth/refresh/ - Alternative method
+   ├─ Include Refresh Token in request body
    ├─ Validate refresh token signature & expiration
    ├─ Generate new Access Token (same user)
-   ├─ Optional: Rotate refresh token
-   └─ Return new tokens
+   ├─ Return new access token + original refresh token
+   └─ User context preserved (id, username, groups)
 
 5. Failed Login
    ├─ Invalid credentials detected
@@ -885,7 +953,145 @@ urlpatterns = [
    └─ metadata: {username, ip_address, browser, os}
 ```
 
-**⚠️ Note**: Refresh token endpoint is configured but not yet implemented. Token lifetime can be extended via settings.
+**✅ Refresh Token**: Fully implemented with both GET and POST methods. Validates token signature, expiration, and user existence. Returns new access token while keeping original refresh token for further rotations.
+
+### Token Refresh Implementation ✅ **NEW**
+
+The refresh token endpoint is fully implemented and production-ready:
+
+**Endpoint Details**:
+- **URL**: `POST /api/auth/refresh/` or `GET /api/auth/refresh/`
+- **Authentication**: Not required (refresh token validates itself)
+- **Content-Type**: application/json
+
+**Request Format**:
+```json
+{
+  "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Response Format**:
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires_in": 3600,
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "groups": ["administrators"]
+  }
+}
+```
+
+**Validation Logic**:
+1. ✅ Extracts refresh token from request body
+2. ✅ Decodes and validates token signature using public key
+3. ✅ Checks token expiration (default 604800 seconds = 7 days)
+4. ✅ Verifies token type is "refresh"
+5. ✅ Looks up user by ID from token payload
+6. ✅ Generates new access token (1 hour TTL)
+7. ✅ Returns both tokens with user context
+
+**Error Handling**:
+- `400 BAD REQUEST` - Missing refresh_token in request
+- `401 UNAUTHORIZED` - Token expired, invalid signature, or user not found
+
+**Example Usage**:
+```bash
+# Get initial tokens via login
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+
+# Response includes access_token and refresh_token
+# When access_token expires, refresh it:
+
+curl -X POST http://localhost:8000/api/auth/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"eyJhbGciOi..."}'
+
+# New access_token ready to use
+```
+
+**Configuration**:
+- Access Token TTL: `JWT_ACCESS_TOKEN_LIFETIME` (default: 3600 seconds = 1 hour)
+- Refresh Token TTL: `JWT_REFRESH_TOKEN_LIFETIME` (default: 604800 seconds = 7 days)
+- Both configurable via environment variables in `auth_service/config/settings/base.py`
+
+### Role & Permission Management ✅ **NEW**
+
+The system now includes a comprehensive role-based access control (RBAC) system:
+
+**Role Management**:
+- Create, read, update, soft delete user roles
+- Each role is a distinct entity with unique name validation
+- Soft delete capability (logical deletion with `is_active` flag)
+- Support for role descriptions and metadata
+- Endpoints:
+  - `GET /api/auth/roles/` - List all roles with filtering
+  - `POST /api/auth/roles/` - Create new role
+  - `GET /api/auth/roles/{id}/` - Retrieve role details
+  - `PUT /api/auth/roles/{id}/` - Update role
+  - `DELETE /api/auth/roles/{id}/` - Soft delete role
+
+**Permission Model**:
+- Proxy models (no database tables) for defining permissions
+- CRUD permissions for each entity:
+  - **Geographic Masters**: Country, State, District, City, Continent
+  - **Organizational Masters**: Plant, Site, Ward, Zone
+  - **Equipment Masters**: Equipment Type
+- Permission format: `master_{entity}_{action}` (e.g., `master_country_create`)
+- Centralized permission list at `GET /api/auth/permissions/`
+- Master-specific permissions grouped by entity at `GET /api/auth/permissions/master/`
+
+**Group Permission Assignment**:
+- Link permissions to Django Groups (roles)
+- Many-to-many relationship via `auth_group_permissions` table
+- Endpoints:
+  - `GET /api/auth/group-permissions/` - List all groups with permissions
+  - `POST /api/auth/group-permissions/` - Assign permissions to group
+  - `GET /api/auth/group-permissions/groups/` - List available groups (dropdown)
+  - `GET /api/auth/group-permissions/permissions/` - List available permissions
+  - `GET /api/auth/group-permissions/by-group/{group_id}/` - Get permissions for specific group
+  - `DELETE /api/auth/group-permissions/remove/{group_id}/` - Remove all permissions from group
+
+**User-Role Assignment**:
+- Users are assigned to roles (UserRole → Group mapping)
+- Users inherit all permissions from their assigned groups
+- Multiple roles per user supported
+- User creation includes role assignment
+
+**Example Workflow**:
+```bash
+# 1. Create a role
+POST /api/auth/roles/
+{
+  "name": "manager",
+  "description": "Department manager role",
+  "is_active": true
+}
+
+# 2. Get available master permissions
+GET /api/auth/permissions/master/
+
+# 3. Assign permissions to the role
+POST /api/auth/group-permissions/
+{
+  "group_id": 1,
+  "permission_ids": [1, 2, 3, 4]  # Create, read, update, delete country
+}
+
+# 4. Create user and assign role
+POST /api/auth/users/
+{
+  "username": "john_manager",
+  "password": "secure_pass",
+  "email": "john@example.com",
+  "role_ids": ["role-uuid"]  # Auto-assign permissions
+}
+```
 
 ### Key Security Features
 
@@ -942,6 +1148,69 @@ urlpatterns = [
    - CSRF protection via middleware (safe with JWT bearer tokens)
    - Authorization header exposure configured
 
+8. **Role-Based Access Control (RBAC)** ✅ **NEW**
+   - Granular permission system with CRUD operations per entity
+   - Django Group integration for role-permission mapping
+   - User-to-role assignment with permission inheritance
+   - Master data permission control (Country, State, City, Plant, Site, Equipment, etc.)
+   - Extensible permission model for new entities
+   - Audit trail for role and permission changes
+
+---
+
+## API Endpoints Reference ✅ **NEW**
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| POST | `/api/auth/login/` | User login (JSON API) | No |
+| GET | `/api/auth/login_page/` | Login HTML form | No |
+| POST | `/api/auth/refresh/` | Refresh access token (JSON body) | No |
+| GET | `/api/auth/refresh/` | Refresh access token (query/body) | No |
+
+### Permission Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/api/auth/permissions/` | List all system permissions | Yes |
+| GET | `/api/auth/permissions/?codename={pattern}` | Filter permissions by codename | Yes |
+| GET | `/api/auth/permissions/master/` | Get master permissions grouped by entity | Yes |
+
+### Role Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/api/auth/roles/` | List all roles with filtering & search | Yes |
+| GET | `/api/auth/roles/?is_active=true&ordering=name` | Get active roles sorted by name | Yes |
+| GET | `/api/auth/roles/?search=manager&ordering=name` | Search roles by name pattern | Yes |
+| POST | `/api/auth/roles/` | Create new role | Yes |
+| GET | `/api/auth/roles/{id}/` | Get role details | Yes |
+| PUT | `/api/auth/roles/{id}/` | Update role | Yes |
+| DELETE | `/api/auth/roles/{id}/` | Soft delete (deactivate) role | Yes |
+| DELETE | `/api/auth/roles/{id}/?hard_delete=true` | Hard delete role | Yes |
+
+### Group-Permission Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/api/auth/group-permissions/` | List all groups with their permissions | Yes |
+| POST | `/api/auth/group-permissions/` | Assign permissions to group | Yes |
+| GET | `/api/auth/group-permissions/groups/` | List available groups (dropdown) | Yes |
+| GET | `/api/auth/group-permissions/permissions/` | List available permissions (multi-select) | Yes |
+| GET | `/api/auth/group-permissions/by-group/{group_id}/` | Get permissions for specific group | Yes |
+| DELETE | `/api/auth/group-permissions/remove/{group_id}/` | Remove all permissions from group | Yes |
+
+### User Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/api/auth/users/` | List all users | Yes |
+| POST | `/api/auth/users/` | Create user with role assignment | Yes |
+| GET | `/api/auth/users/{id}/` | Get user details | Yes |
+| PUT | `/api/auth/users/{id}/` | Update user | Yes |
+| DELETE | `/api/auth/users/{id}/` | Delete user | Yes |
+
 ---
 
 ## Project Structure
@@ -983,12 +1252,20 @@ erp-backend/
 │   │   └── authentication/
 │   │       ├── models/
 │   │       │   ├── audit.py              # Audit log model
+│   │       │   ├── permissions.py        # Permission proxy models (NEW)
+│   │       │   ├── user_role.py          # UserRole model (NEW)
+│   │       │   ├── user_profile.py       # User profile extension
 │   │       │   └── __init__.py
 │   │       ├── views/
-│   │       │   └── auth.py               # Login/refresh endpoints
+│   │       │   ├── auth.py               # Login/refresh endpoints
+│   │       │   ├── permission_and_role.py # Role/permission endpoints (NEW)
+│   │       │   ├── user.py               # User management endpoints (NEW)
+│   │       │   └── __init__.py
 │   │       ├── serializers/
 │   │       │   ├── login.py
 │   │       │   ├── token.py
+│   │       │   ├── permission_and_role.py # Role/permission serializers (NEW)
+│   │       │   ├── user.py               # User serializers (NEW)
 │   │       │   └── __init__.py
 │   │       ├── services/
 │   │       │   ├── token_service.py
@@ -998,6 +1275,7 @@ erp-backend/
 │   │       │   └── auth/
 │   │       ├── middleware/
 │   │       │   └── jwt_auth.py
+│   │       ├── migrations/
 │   │       ├── urls.py
 │   │       └── __init__.py
 │   ├── keys/                             # JWT signing keys
@@ -1153,6 +1431,141 @@ erp-backend/
    python manage.py runserver 8000
    ```
 
+### Testing Role & Permission Management ✅ **NEW**
+
+**1. Get All Permissions**
+```bash
+curl -X GET http://localhost:8000/api/auth/permissions/ \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**2. Get Master Permissions Grouped by Entity**
+```bash
+curl -X GET http://localhost:8000/api/auth/permissions/master/ \
+  -H "Authorization: Bearer <access_token>"
+
+# Response shows permissions grouped by entity (country, state, city, etc.)
+```
+
+**3. Create a New Role**
+```bash
+curl -X POST http://localhost:8000/api/auth/roles/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "manager",
+    "description": "Department Manager Role",
+    "is_active": true
+  }'
+```
+
+**4. List Roles with Filtering**
+```bash
+# Get active roles, ordered by name
+curl -X GET "http://localhost:8000/api/auth/roles/?is_active=true&ordering=name" \
+  -H "Authorization: Bearer <access_token>"
+
+# Search by name pattern
+curl -X GET "http://localhost:8000/api/auth/roles/?search=admin&ordering=name" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**5. Get Available Groups for Permission Assignment**
+```bash
+curl -X GET http://localhost:8000/api/auth/group-permissions/groups/ \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**6. Assign Permissions to a Role**
+```bash
+curl -X POST http://localhost:8000/api/auth/group-permissions/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "group_id": 1,
+    "permission_ids": [1, 2, 3, 4]
+  }'
+```
+
+**7. Get Permissions Assigned to a Role**
+```bash
+curl -X GET "http://localhost:8000/api/auth/group-permissions/by-group/1/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+**8. Create User with Role Assignment**
+```bash
+curl -X POST http://localhost:8000/api/auth/users/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_manager",
+    "password": "SecurePass@123",
+    "email": "john@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "role_ids": ["12345678-1234-5678-1234-567812345678"]
+  }'
+```
+
+**9. Remove All Permissions from a Role**
+```bash
+curl -X DELETE "http://localhost:8000/api/auth/group-permissions/remove/1/" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Testing Token Refresh ✅ **NEW**
+
+**1. Login and Get Tokens**
+```bash
+RESPONSE=$(curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}')
+
+# Extract tokens (bash jq required)
+ACCESS_TOKEN=$(echo $RESPONSE | jq -r '.access_token')
+REFRESH_TOKEN=$(echo $RESPONSE | jq -r '.refresh_token')
+
+echo "Access Token: $ACCESS_TOKEN"
+echo "Refresh Token: $REFRESH_TOKEN"
+```
+
+**2. Verify Access Token Works**
+```bash
+curl -X GET http://localhost:8000/api/master/countries/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+```
+
+**3. Simulate Token Expiration and Refresh**
+```bash
+# Wait or the access token will expire in 1 hour
+# Then refresh it:
+
+curl -X POST http://localhost:8000/api/auth/refresh/ \
+  -H "Content-Type: application/json" \
+  -d "{\"refresh_token\":\"$REFRESH_TOKEN\"}"
+
+# Response includes new access_token
+```
+
+**4. Test Error Handling - Missing Token**
+```bash
+curl -X POST http://localhost:8000/api/auth/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{}'
+
+# Response: {"error": "refresh_token is required"} (400 BAD REQUEST)
+```
+
+**5. Test Error Handling - Invalid Token**
+```bash
+curl -X POST http://localhost:8000/api/auth/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"invalid_token_here"}'
+
+# Response: {"error": "Invalid refresh token"} (401 UNAUTHORIZED)
+```
+
 ### Testing the Flow
 
 1. **Login**
@@ -1168,9 +1581,30 @@ erp-backend/
      -H "Authorization: Bearer <access_token>"
    ```
 
-3. **Access API Documentation**
-   - Swagger: http://localhost:8002/api/docs/swagger/
-   - ReDoc: http://localhost:8002/api/docs/redoc/
+3. **Access Interactive API Documentation** ✅
+   
+   Choose your preferred documentation style:
+   
+   **Option A: Swagger UI** (Interactive Testing)
+   - Auth Service: http://localhost:8001/swagger/
+   - Master Service: http://localhost:8002/api/docs/swagger/
+   - Features: Try-out buttons, request/response visualization, parameter forms
+   
+   **Option B: ReDoc** (Beautiful Documentation) 📖 *Recommended for learning*
+   - Auth Service: http://localhost:8001/redoc/
+   - Master Service: http://localhost:8002/api/docs/redoc/
+   - Features: Cleaner layout, searchable, excellent for understanding API design, mobile-friendly
+   - Why use ReDoc:
+     - ✅ Better organized and easier to navigate
+     - ✅ Perfect for reading comprehensive documentation
+     - ✅ Excellent for onboarding new developers
+     - ✅ Mobile/tablet friendly
+     - ✅ Search functionality for finding endpoints
+   
+   **Option C: Raw OpenAPI Schema**
+   - Auth Service: http://localhost:8001/swagger.json
+   - Master Service: http://localhost:8002/api/docs/schema.json
+   - Use for: Importing into Postman, code generation, external tools
 
 ### Testing Audit Logging
 
@@ -1201,17 +1635,180 @@ FROM auth_audit_log
 ORDER BY created_at DESC LIMIT 5;
 ```
 
-### Known Limitations ⚠️
+---
 
-**Refresh Token Endpoint Not Implemented**:
-- Refresh token is generated during login
-- Configuration exists: `JWT_REFRESH_TOKEN_LIFETIME=604800` (7 days)
-- **TODO**: Implement `POST /api/auth/refresh/` endpoint to:
-  1. Accept refresh token in request body
-  2. Validate token signature and expiration
-  3. Generate new access token
-  4. Optionally rotate refresh token
-  5. Return new tokens
+## API Documentation Guide ✅ **Swagger & ReDoc**
+
+### Why Two Documentation Formats?
+
+**Swagger UI** and **ReDoc** serve different purposes and audiences:
+
+| Feature | Swagger UI | ReDoc |
+|---------|-----------|-------|
+| **Purpose** | Interactive testing | Reading documentation |
+| **Best For** | Developers testing APIs | Understanding API design |
+| **UI Style** | Form-based, detailed controls | Clean, markdown-based |
+| **Testing** | ✅ Try-it-out buttons | ❌ No direct testing |
+| **Mobile** | ⚠️ Decent | ✅ Excellent |
+| **Learning Curve** | Steep with complex specs | Gentle, intuitive |
+| **Search** | ⚠️ Limited | ✅ Fast search |
+| **Data Models** | Mixed with endpoints | Organized separately |
+| **Share with Non-Devs** | ❌ Too technical | ✅ Perfect |
+
+### Using ReDoc for Documentation 📖
+
+**Why ReDoc is excellent for understanding the API**:
+
+1. **Clean Visual Layout**
+   - Endpoints on left, description in center, examples on right
+   - No cluttered forms or input fields
+   - Perfect for reading specifications
+
+2. **Searchable Documentation**
+   - Ctrl+F to find endpoints quickly
+   - Search by endpoint name, parameter, or description
+   - Perfect for large APIs with 50+ endpoints
+
+3. **Organized by Tags**
+   - Endpoints grouped by feature (Auth, Roles, Permissions, etc.)
+   - Easy to navigate related functionality
+   - Understand API architecture at a glance
+
+4. **Excellent Request/Response Examples**
+   - Real-world example on right side
+   - Shows request body and response
+   - Learn by example
+
+5. **Mobile-Friendly**
+   - Perfect on tablets, phones, or small screens
+   - No scrolling complex forms
+   - Share on any device
+
+6. **Perfect for Onboarding**
+   - Non-technical stakeholders can understand API
+   - Product managers see what's available
+   - New developers learn structure quickly
+
+7. **Download & Share**
+   - Export OpenAPI specification
+   - Use for code generation
+   - Import into Postman/Insomnia
+
+### Quick Comparison: When to Use What
+
+**Use Swagger UI when you want to**:
+- ✅ Test an endpoint immediately
+- ✅ Send actual requests and see responses
+- ✅ Debug API behavior
+- ✅ Experiment with parameters
+- ✅ Verify authentication works
+
+**Use ReDoc when you want to**:
+- ✅ Understand API structure
+- ✅ Learn endpoint details
+- ✅ Find a specific endpoint
+- ✅ Read comprehensive documentation
+- ✅ Onboard new team members
+- ✅ Share with non-developers
+- ✅ Plan API integration
+
+### All Documentation Endpoints
+
+**Auth Service (Port 8001)**:
+```
+Interactive Testing:
+  POST   /swagger/                    (Swagger UI - try endpoints)
+
+Beautiful Documentation:
+  GET    /redoc/                      (ReDoc - read docs)
+
+Raw Specification:
+  GET    /swagger.json                (OpenAPI JSON format)
+  GET    /swagger.yaml                (OpenAPI YAML format)
+```
+
+**Master Service (Port 8002)**:
+```
+Interactive Testing:
+  GET    /api/docs/swagger/           (Swagger UI - try endpoints)
+
+Beautiful Documentation:
+  GET    /api/docs/redoc/             (ReDoc - read docs)
+
+Raw Specification:
+  GET    /api/docs/schema.json        (OpenAPI JSON format)
+  GET    /api/docs/schema.yaml        (OpenAPI YAML format)
+```
+
+### Accessing Documentation
+
+**In Browser** (Recommended):
+```
+# Auth Service ReDoc
+http://localhost:8001/redoc/
+
+# Master Service ReDoc
+http://localhost:8002/api/docs/redoc/
+
+# Or use IP address
+http://0.0.0.0:8001/redoc/
+http://0.0.0.0:8002/api/docs/redoc/
+```
+
+**In Terminal** (Get raw spec):
+```bash
+# Get OpenAPI JSON
+curl http://localhost:8001/swagger.json | jq
+
+# Get OpenAPI YAML
+curl http://localhost:8001/swagger.yaml
+
+# Save for external tools
+curl http://localhost:8002/api/docs/schema.json > openapi.json
+```
+
+**Import into Postman/Insomnia**:
+1. Open Postman/Insomnia
+2. Import → Link → Paste endpoint URL:
+   - `http://localhost:8001/swagger.json` (Auth Service)
+   - `http://localhost:8002/api/docs/schema.json` (Master Service)
+3. All endpoints auto-populate with descriptions, parameters, and examples
+
+---
+
+### Known Limitations ⚠️ & Future Enhancements
+
+**Completed Features** ✅:
+- JWT token generation (access & refresh)
+- Token refresh mechanism with full validation
+- Login audit logging (success & failure)
+- Role-based access control (RBAC)
+- Permission management system
+- User-role assignment
+- Group-permission linking
+- Soft delete implementation
+- PBKDF2-SHA256 password hashing
+- CORS security
+- Swagger/OpenAPI documentation
+
+**Future Enhancements** (TODO):
+1. **Permission Enforcement at Endpoints**: Add authorization decorators to enforce role-based access at master service endpoints
+2. **Token Blacklisting for Logout**: Implement logout functionality by blacklisting used tokens
+3. **Refresh Token Rotation**: Optionally rotate refresh tokens on each refresh for enhanced security
+4. **Master Service JWT Validation**: Master service should validate JWT from context headers (currently trusts API Gateway)
+5. **Multi-Factor Authentication (MFA)**: Add OTP or 2FA for enhanced security
+6. **Advanced Permission Queries**: Optimize UserRole ↔ Group linking for complex permission checks
+7. **Rate Limiting**: Add rate limiting to prevent brute force attacks
+8. **API Key Authentication**: Support API key-based authentication for service-to-service communication
+
+**Ready for Production** ✅:
+- Role & Permission Management System
+- User-Role Assignment
+- Token Generation & Refresh (both access and refresh tokens)
+- Audit Logging
+- CORS Security
+- Soft Delete Implementation
+- Swagger/OpenAPI Documentation
 
 ---
 
@@ -1335,5 +1932,23 @@ For issues, questions, or contributions, please contact the development team.
 
 ---
 
-**Last Updated**: January 23, 2026  
-**Version**: 1.0.0
+**Last Updated**: January 29, 2026  
+**Version**: 1.3.0  
+**Latest Changes**: 
+- ✅ Comprehensive API Documentation Guide (Swagger & ReDoc)
+- ✅ Detailed ReDoc explanation and use cases
+- ✅ All documentation endpoints documented
+- ✅ Comparison tables for Swagger vs ReDoc
+- ✅ Instructions for importing into Postman/Insomnia
+- ✅ Token Refresh Endpoint Implementation (Full)
+- ✅ Complete token validation and error handling
+
+**Version**: 1.2.0  
+**Latest Changes**: 
+- ✅ Token Refresh Endpoint Implementation (Full)
+- ✅ GET & POST methods for token refresh
+- ✅ Comprehensive token validation logic
+- ✅ Error handling for expired/invalid tokens
+- ✅ Complete API documentation updated
+- ✅ Testing examples for all endpoints
+- ✅ Production-ready status confirmed

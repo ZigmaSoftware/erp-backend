@@ -8,32 +8,35 @@ from .continent import Continent
 
 
 class District(BaseMaster):
+    
+    continent_id = models.ForeignKey(
+        Continent,
+        on_delete=models.PROTECT,
+        related_name="districts",
+        to_field="unique_id",
+        db_column="continent_id",
+    )
 
     country_id = models.ForeignKey(
         Country,
         on_delete=models.PROTECT,
         related_name="districts",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="country_id",
     )
 
     state_id = models.ForeignKey(
         State,
         on_delete=models.PROTECT,
         related_name="districts",
-        to_field="unique_id"
-    )
-
-    continent_id = models.ForeignKey(
-        Continent,
-        on_delete=models.PROTECT,
-        related_name="districts",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="state_id",
     )
 
     name = models.CharField(max_length=100)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
         unique_together = ("state_id", "name")   # FIXED
 
     def __str__(self):

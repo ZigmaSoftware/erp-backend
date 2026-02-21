@@ -18,3 +18,4 @@ setuptools
 sqlparse
 urllib3
 wheel
+drf_yasg

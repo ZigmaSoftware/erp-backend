@@ -11,7 +11,8 @@ class Country(BaseMaster):
         Continent,
         on_delete=models.PROTECT,
         related_name="countries",
-        to_field="unique_id"
+        to_field="unique_id",
+        db_column="continent_id",
     )
 
     name = models.CharField(max_length=100)
@@ -19,7 +20,7 @@ class Country(BaseMaster):
     mob_code = models.CharField(max_length=5, null=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
 
     def __str__(self):
         return self.name
