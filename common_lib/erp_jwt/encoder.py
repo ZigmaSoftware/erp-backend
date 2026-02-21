@@ -18,6 +18,7 @@ def generate_access_token(user) -> str:
     payload = {
         "sub": str(user.id),
         "username": user.username,
+        "is_superuser": bool(user.is_superuser),
         "groups": list(user.groups.values_list("name", flat=True)),
         "iat": int(time.time()),
         "exp": int(time.time()) + settings.JWT_SETTINGS["ACCESS_TOKEN_LIFETIME"],
@@ -39,6 +40,7 @@ def generate_refresh_token(user) -> str:
     payload = {
         "sub": str(user.id),
         "iat": int(time.time()),
+        "is_superuser": bool(user.is_superuser),
         "exp": int(time.time()) + settings.JWT_SETTINGS["REFRESH_TOKEN_LIFETIME"],
         "iss": settings.JWT_SETTINGS["ISSUER"],
         "type": "refresh",
