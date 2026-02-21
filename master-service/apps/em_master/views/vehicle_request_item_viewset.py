@@ -9,6 +9,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from apps.em_master.models.vehicle_request import VehicleRequest, RequestStatus
 from apps.em_master.serializers.vehicle_request_item_serializer import (
+    VehicleRequestReadSerializer,
     VehicleRequestSerializer,
 )
 
@@ -22,6 +23,11 @@ class VehicleRequestViewSet(ModelViewSet):
     serializer_class = VehicleRequestSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "unique_id"
+
+    def get_serializer_class(self):
+        if self.action in ["list", "retrieve"]:
+            return VehicleRequestReadSerializer
+        return VehicleRequestSerializer
 
     @swagger_auto_schema(
         operation_summary="Create vehicle request",

@@ -26,6 +26,7 @@ class VehicleRequest(BaseMaster):
         UserProfile,
         on_delete=models.PROTECT,
         related_name="vehicle_requests",
+        to_field="id",
         db_column="staff_id",
     )
 
