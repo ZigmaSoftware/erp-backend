@@ -1,101 +1,89 @@
-import re
-
-from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
-
-from auth_service.apps.authentication.models.user_profile import UserProfile
 
 from apps.common_master.serializers.site import SiteSerializer
 from apps.em_master.models.vehicle_request import VehicleRequest, RequestStatus
 from apps.em_master.utils.request_id_gen import generate_vehicle_request_no
-
 from apps.em_master.models.vehicle_request_item import VehicleRequestItem
 from apps.em_master.models.equipment_modelmaster import EquipmentModelMaster
+from auth_service.apps.authentication.models.user_profile import UserProfile
+from django.contrib.auth.models import User
 
 
-# -----------------------------
-# Child Serializer
-# -----------------------------
-class VehicleRequestItemSerializer(serializers.ModelSerializer):
-    equipment_model = serializers.SlugRelatedField(
-        slug_field="unique_id",
-        queryset=EquipmentModelMaster.objects.filter(is_active=True),
+class UniqueIDForeignKeyField(serializers.CharField):
+    def __init__(self, queryset, **kwargs):
+        self.queryset = queryset
+        super().__init__(**kwargs)
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        try:
+            return self.queryset.get(unique_id=value, is_deleted=False)
+        except self.queryset.model.DoesNotExist:
+            raise serializers.ValidationError(
+                f"{self.queryset.model.__name__} with unique_id `{value}` not found."
+            )
+
+    def to_representation(self, value):
+        if hasattr(value, "unique_id"):
+            return str(value.unique_id)
+        return super().to_representation(value)
+
+
+class VehicleRequestItemBaseSerializer(serializers.ModelSerializer):
+    equipment_model_id = UniqueIDForeignKeyField(
+        queryset=EquipmentModelMaster.objects.filter(is_deleted=False),
+    )
+    equipment_type_id = serializers.CharField(
+        source="equipment_type.unique_id",
+        read_only=True,
     )
 
     class Meta:
         model = VehicleRequestItem
         fields = [
             "id",
-            "equipment_model",
+            "unique_id",
+            "equipment_model_id",
+            "equipment_type_id",
             "qty",
             "unit",
             "purpose",
         ]
+        read_only_fields = ["id", "unique_id", "equipment_type_id"]
+
+    def _ensure_equipment_type(self, validated_data):
+        equipment_model = validated_data.get("equipment_model_id")
+        if equipment_model:
+            validated_data["equipment_type_id"] = equipment_model.equipment_type
+        return validated_data
+
+    def create(self, validated_data):
+        validated_data = self._ensure_equipment_type(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data = self._ensure_equipment_type(validated_data)
+        return super().update(instance, validated_data)
 
 
-# -----------------------------
-# Parent Serializer (Nested)
-# -----------------------------
-class StaffRelatedField(serializers.PrimaryKeyRelatedField):
-    """
-    Accept either a UserProfile PK, or a remote user identifier (prefers UserProfile but will create
-    a placeholder User/UserProfile when the staff id only exists on the gateway JWT).
-    """
+class VehicleRequestItemNestedSerializer(VehicleRequestItemBaseSerializer):
+    class Meta(VehicleRequestItemBaseSerializer.Meta):
+        pass
 
-    def __init__(self, **kwargs):
-        kwargs.setdefault(
-            "queryset", UserProfile.objects.filter(user__is_active=True)
-        )
-        super().__init__(**kwargs)
 
-    def to_internal_value(self, data):
-        try:
-            return super().to_internal_value(data)
-        except serializers.ValidationError:
-            try:
-                user = self._resolve_or_create_user(data)
-            except ValueError:
-                raise serializers.ValidationError("Invalid staff identifier.")
+class VehicleRequestItemSerializer(VehicleRequestItemBaseSerializer):
+    vehicle_request_id = UniqueIDForeignKeyField(
+        queryset=VehicleRequest.objects.filter(is_deleted=False),
+    )
 
-            profile, _ = UserProfile.objects.get_or_create(user=user)
-            return profile
-
-    def _resolve_or_create_user(self, identifier):
-        """
-        When there is no local UserProfile for the provided id, create a placeholder User so the
-        request can be tied to the remote staff ID coming from the JWT/gateway.
-        """
-
-        try:
-            return User.objects.get(pk=int(identifier), is_active=True)
-        except (User.DoesNotExist, ValueError, TypeError):
-            pass
-
-        username = self._remote_username(identifier)
-
-        user, created = User.objects.get_or_create(username=username)
-        if created:
-            user.set_unusable_password()
-            user.is_active = True
-            user.save(update_fields=["password", "is_active"])
-
-        return user
-
-    def _remote_username(self, identifier):
-        """
-        Build a deterministic username from the remote identifier so repeated requests map to the
-        same placeholder user.
-        """
-
-        sanitized = re.sub(r"[^\w]+", "_", str(identifier or ""))
-        sanitized = sanitized.strip("_")[:60] or "remote"
-        return f"remote_user_{sanitized}"
+    class Meta(VehicleRequestItemBaseSerializer.Meta):
+        fields = VehicleRequestItemBaseSerializer.Meta.fields + ["vehicle_request_id"]
+        read_only_fields = VehicleRequestItemBaseSerializer.Meta.read_only_fields
 
 
 class VehicleRequestSerializer(serializers.ModelSerializer):
-    items = VehicleRequestItemSerializer(many=True)
-    staff = StaffRelatedField()
+    items = VehicleRequestItemNestedSerializer(many=True)
     request_no = serializers.CharField(read_only=True)
 
     class Meta:
@@ -105,16 +93,12 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
             "request_no",
             "request_date",
             "description",
-            "staff",
-            "site",
+            "site_id",
             "request_status",
             "items",
         ]
         read_only_fields = ["request_no", "request_date"]
 
-    # -----------------------------
-    # Validation
-    # -----------------------------
     def validate(self, attrs):
         status = attrs.get("request_status")
 
@@ -127,9 +111,18 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    # -----------------------------
-    # CREATE (Atomic)
-    # -----------------------------
+    def _prepare_item_kwargs(self, vehicle_request, item_data):
+        equipment_model = item_data.get("equipment_model_id")
+        if not equipment_model:
+            raise serializers.ValidationError(
+                "Each item must reference an equipment model."
+            )
+
+        item_kwargs = item_data.copy()
+        item_kwargs["equipment_type_id"] = equipment_model.equipment_type
+        item_kwargs["vehicle_request_id"] = vehicle_request
+        return item_kwargs
+
     @transaction.atomic
     def create(self, validated_data):
         items_data = validated_data.pop("items")
@@ -139,19 +132,13 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
 
         for item in items_data:
             VehicleRequestItem.objects.create(
-                vehicle_request=vehicle_request,
-                **item
+                **self._prepare_item_kwargs(vehicle_request, item)
             )
 
         return vehicle_request
 
-    # -----------------------------
-    # UPDATE (Atomic)
-    # -----------------------------
     @transaction.atomic
     def update(self, instance, validated_data):
-
-        # Lock if approved
         if instance.request_status == RequestStatus.APPROVED:
             raise serializers.ValidationError(
                 "Approved request cannot be modified."
@@ -159,20 +146,16 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
 
         items_data = validated_data.pop("items", None)
 
-        # Update parent fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
 
-        # Update items if provided
         if items_data is not None:
             instance.items.all().delete()
-
             for item in items_data:
                 VehicleRequestItem.objects.create(
-                    vehicle_request=instance,
-                    **item
+                    **self._prepare_item_kwargs(instance, item)
                 )
 
         return instance
@@ -194,10 +177,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class VehicleRequestReadSerializer(serializers.ModelSerializer):
-    items = VehicleRequestItemSerializer(many=True, read_only=True)
-    staff = UserProfileSerializer()
+    items = VehicleRequestItemNestedSerializer(many=True, read_only=True)
     approved_by = UserProfileSerializer(allow_null=True, required=False)
-    site = SiteSerializer()
+    site = SiteSerializer(source="site_id", read_only=True)
 
     class Meta:
         model = VehicleRequest
@@ -207,7 +189,7 @@ class VehicleRequestReadSerializer(serializers.ModelSerializer):
             "request_no",
             "request_date",
             "description",
-            "staff",
+            "site_id",
             "site",
             "request_status",
             "items",
