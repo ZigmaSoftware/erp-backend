@@ -18,12 +18,12 @@ class VehicleCreationViewSet(ModelViewSet):
     queryset = (
         VehicleCreation.objects.filter(is_deleted=False)
         .select_related(
-            "contractor",
-            "supplier",
-            "request",
-            "site",
-            "equipment_type",
-            "equipment_model",
+            "contractor_id",
+            "supplier_id",
+            "request_id",
+            "site_id",
+            "equipment_type_id",
+            "equipment_model_id",
         )
     )
 

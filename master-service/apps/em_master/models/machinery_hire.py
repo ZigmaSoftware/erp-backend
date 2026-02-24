@@ -82,7 +82,7 @@ class MachineryHire(BaseMaster):
                 raise ValidationError("Selected vehicle is inactive.")
 
             # Rule 2: Site must match vehicle site
-            if self.site != self.vehicle.site:
+            if self.site_id != self.vehicle.site_id:
                 raise ValidationError(
                     "Selected site does not match vehicle site."
                 )
