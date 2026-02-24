@@ -19,11 +19,11 @@ class MachineryHireViewSet(ModelViewSet):
     lookup_field = "unique_id"
 
     def get_queryset(self):
-        queryset = super().get_queryset().select_related(
-            "site",
-            "equipment_type",
-            "equipment_model",
-            "vehicle",
+        queryset = MachineryHire.objects.select_related(
+            "vehicle_id",
+            "site_id",
+            "equipment_model_id",
+            "equipment_type_id",
         )
 
         filters = {

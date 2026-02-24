@@ -64,7 +64,6 @@ class VehicleCreation(BaseMaster):
         related_name="vehicles",
         to_field="unique_id",
         db_column="site_id",
-        
     )
 
     equipment_type_id = models.ForeignKey(
