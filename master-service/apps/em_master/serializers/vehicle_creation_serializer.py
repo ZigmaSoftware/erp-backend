@@ -10,142 +10,134 @@ from apps.em_master.models.vehicle_suppliermaster import VehicleSupplierMaster
 
 
 class VehicleCreationSerializer(serializers.ModelSerializer):
-    contractor = serializers.SlugRelatedField(
+
+    # -----------------------------------------
+    # ForeignKey Fields (accept unique_id)
+    # -----------------------------------------
+
+    contractor_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=ContractorMaster.objects.filter(is_deleted=False),
-        allow_null=True,
         required=False,
+        allow_null=True,
+        error_messages={"does_not_exist": "Invalid contractor_id."},
     )
 
-    supplier = serializers.SlugRelatedField(
+    supplier_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=VehicleSupplierMaster.objects.filter(is_deleted=False),
-        allow_null=True,
         required=False,
+        allow_null=True,
+        error_messages={"does_not_exist": "Invalid supplier_id."},
     )
 
-    request = serializers.SlugRelatedField(
+    request_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=VehicleRequest.objects.filter(is_deleted=False),
+        error_messages={"does_not_exist": "Invalid request_id."},
     )
 
-    site = serializers.SlugRelatedField(
+    site_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=Site.objects.filter(is_deleted=False),
+        error_messages={"does_not_exist": "Invalid site_id."},
     )
 
-    equipment_type = serializers.SlugRelatedField(
+    equipment_type_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=EquipmentTypeMaster.objects.filter(is_deleted=False),
+        error_messages={"does_not_exist": "Invalid equipment_type_id."},
     )
 
-    equipment_model = serializers.SlugRelatedField(
+    equipment_model_id = serializers.SlugRelatedField(
         slug_field="unique_id",
         queryset=EquipmentModelMaster.objects.filter(is_deleted=False),
+        error_messages={"does_not_exist": "Invalid equipment_model_id."},
     )
+
+    # -----------------------------------------
+    # Name Fields (GET only)
+    # -----------------------------------------
+
+    contractor_name = serializers.CharField(
+        source="contractor_id.contractor_name",
+        read_only=True,
+    )
+
+    supplier_name = serializers.CharField(
+        source="supplier_id.supplier_name",
+        read_only=True,
+    )
+
+    request_no = serializers.CharField(
+        source="request_id.request_no",
+        read_only=True,
+    )
+
+    site_name = serializers.CharField(
+        source="site_id.site_name",
+        read_only=True,
+    )
+
+    equipment_type_name = serializers.CharField(
+        source="equipment_type_id.name",
+        read_only=True,
+    )
+
+    equipment_model_name = serializers.CharField(
+        source="equipment_model_id.model_name",
+        read_only=True,
+    )
+
+    # -----------------------------------------
 
     class Meta:
         model = VehicleCreation
-        fields = [
-            "id",
-            "unique_id",
-            "vehicle_code",
-            "hire_type",
-            "contractor",
-            "supplier",
-            "request",
-            "site",
-            "equipment_type",
-            "equipment_model",
-            "vehicle_reg_no",
-            "permit_expiry",
-            "fc_expiry",
-            "insurance_expiry",
-            "road_tax_expiry",
-            "rental_basis",
-            "target_hours",
-            "plant_entry_date",
-            "rc_invoice_date",
-            "is_active",
-            "is_deleted",
-            "created_at",
-            "updated_at",
-            "created_by",
-            "updated_by",
-        ]
+        fields = "__all__"
 
         read_only_fields = [
-            "id",
             "unique_id",
             "created_at",
             "updated_at",
             "created_by",
             "updated_by",
+            "contractor_name",
+            "supplier_name",
+            "request_no",
+            "site_name",
+            "equipment_type_name",
+            "equipment_model_name",
         ]
 
+        validators = []
+
+    # -----------------------------------------
+    # Business Validation Only
+    # -----------------------------------------
+
     def validate(self, attrs):
-        """
-        Business Rules:
-        1. Request must exist and be APPROVED
-        2. If hire_type = HIRE → contractor or supplier required
-        3. If hire_type = OWN → contractor and supplier must be empty
-        4. Contractor and supplier cannot both be provided
-        """
 
-        hire_type = attrs.get(
-            "hire_type",
-            getattr(self.instance, "hire_type", None),
-        )
+        site = attrs.get("site_id", getattr(self.instance, "site_id", None))
+        vehicle = attrs.get("vehicle_id", getattr(self.instance, "vehicle_id", None))
+        equipment_model = attrs.get("equipment_model_id", getattr(self.instance, "equipment_model_id", None))
+        equipment_type = attrs.get("equipment_type_id", getattr(self.instance, "equipment_type_id", None))
 
-        contractor = attrs.get(
-            "contractor",
-            getattr(self.instance, "contractor", None),
-        )
+        errors = {}
 
-        supplier = attrs.get(
-            "supplier",
-            getattr(self.instance, "supplier", None),
-        )
+        if vehicle and not vehicle.is_active:
+            errors["vehicle_id"] = "Selected vehicle is inactive."
 
-        request = attrs.get(
-            "request",
-            getattr(self.instance, "request", None),
-        )
+        if vehicle and site:
+            if vehicle.site_id != site:
+                errors["site_id"] = "Selected site must match vehicle's site."
 
-        # --- Request validation ---
-        if not request:
-            raise serializers.ValidationError(
-                {"request": "Request is required."}
-            )
-
-        if request.request_status != RequestStatus.APPROVED:
-            raise serializers.ValidationError(
-                {"request": "Vehicle can only be created for APPROVED requests."}
-            )
-
-        # --- Hire type validation ---
-        if hire_type == VehicleCreation.HireType.HIRE:
-            if not contractor and not supplier:
-                raise serializers.ValidationError(
-                    {
-                        "contractor": "Contractor or Supplier is required when hire type is HIRE."
-                    }
+        if equipment_model and equipment_type:
+            if equipment_model.equipment_type_id != equipment_type:
+                errors["equipment_model_id"] = (
+                    "Selected equipment model does not belong to chosen type."
                 )
 
-        if hire_type == VehicleCreation.HireType.OWN:
-            if contractor or supplier:
-                raise serializers.ValidationError(
-                    {
-                        "hire_type": "Contractor and Supplier must be empty when hire type is OWN."
-                    }
-                )
-
-        # --- Mutual exclusivity (optional but recommended) ---
-        if contractor and supplier:
-            raise serializers.ValidationError(
-                {
-                    "supplier": "Only one of contractor or supplier can be provided."
-                }
-            )
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return attrs
