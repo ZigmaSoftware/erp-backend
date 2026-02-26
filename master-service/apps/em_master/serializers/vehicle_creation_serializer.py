@@ -132,7 +132,8 @@ class VehicleCreationSerializer(serializers.ModelSerializer):
                 errors["site_id"] = "Selected site must match vehicle's site."
 
         if equipment_model and equipment_type:
-            if equipment_model.equipment_type_id != equipment_type:
+            if equipment_model.equipment_type != equipment_type:
+                print("Model's type:", equipment_model.equipment_type)
                 errors["equipment_model_id"] = (
                     "Selected equipment model does not belong to chosen type."
                 )
