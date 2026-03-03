@@ -49,7 +49,6 @@ class VehicleCreationViewSet(ModelViewSet):
             else None
         )
         serializer.save(created_by=username, updated_by=username)
-
     # ----------------------------
     # UPDATE
     # ----------------------------
