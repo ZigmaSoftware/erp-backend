@@ -36,7 +36,7 @@ class District(BaseMaster):
     name = models.CharField(max_length=100)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
         unique_together = ("state_id", "name")   # FIXED
 
     def __str__(self):

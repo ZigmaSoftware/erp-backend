@@ -28,7 +28,7 @@ class State(BaseMaster):
     label = models.CharField(max_length=20, blank=True, null=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
         unique_together = ("country_id", "name")
 
     def __str__(self):

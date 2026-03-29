@@ -46,7 +46,7 @@ class City(BaseMaster):
     description = models.TextField(blank=True, null=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
 
     def __str__(self):
         return f"{self.name} ({self.state_id.name})"

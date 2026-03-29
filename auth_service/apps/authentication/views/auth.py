@@ -33,6 +33,18 @@ def get_user_roles(user):
 
 
 
+def build_user_payload(user):
+    """
+    Return the standard user shape exposed via auth responses.
+    """
+    return {
+        "id": user.id,
+        "username": user.username,
+        "roles": get_user_roles(user),
+        "is_superuser": bool(user.is_superuser),
+    }
+
+
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = []
@@ -51,7 +63,7 @@ class LoginView(APIView):
         browser, os = parse_browser_os(user_agent)
 
         if not user:
-            # 🔒 Log failed attempt
+            #  Log failed attempt
             AuthAuditLog.objects.create(
                 user=None,
                 event_type="LOGIN_FAILED",
@@ -68,11 +80,11 @@ class LoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # ✅ Generate tokens
+        #  Generate tokens
         access_token = generate_access_token(user)
         refresh_token = generate_refresh_token(user)
 
-        # ✅ Log success
+        #  Log success
         AuthAuditLog.objects.create(
             user=user,
             event_type="LOGIN_SUCCESS",
@@ -88,11 +100,7 @@ class LoginView(APIView):
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "expires_in": 3600,
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "roles": get_user_roles(user),
-                },
+                "user": build_user_payload(user),
             },
             status=status.HTTP_200_OK,
         )
@@ -223,11 +231,7 @@ class TokenRefreshView(APIView):
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "expires_in": 3600,
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "roles": get_user_roles(user),
-                },
+                "user": build_user_payload(user),
             },
             status=status.HTTP_200_OK,
         )
@@ -276,11 +280,7 @@ class TokenRefreshView(APIView):
                 "access_token": access_token,
                 "refresh_token": refresh_token,
                 "expires_in": 3600,
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "roles": get_user_roles(user),
-                }
+                "user": build_user_payload(user),
             },
             status=status.HTTP_200_OK,
         )

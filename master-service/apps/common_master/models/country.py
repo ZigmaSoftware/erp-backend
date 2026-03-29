@@ -20,7 +20,7 @@ class Country(BaseMaster):
     mob_code = models.CharField(max_length=5, null=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["id"]
 
     def __str__(self):
         return self.name
