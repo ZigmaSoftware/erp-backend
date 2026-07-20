@@ -52,6 +52,7 @@ urlpatterns = [
     ),
     path("v1/masters/", include("apps.common_master.urls")),
     path("v1/em-masters/", include("apps.em_master.urls")),
+    path("v1/sales-masters/", include("apps.sales_master.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
