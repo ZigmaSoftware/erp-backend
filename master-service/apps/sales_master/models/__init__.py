@@ -7,6 +7,9 @@ from .terms_of_payment_creation_master import TermsOfPaymentCreationMaster
 from .mail_details_creation_master import MailDetailsCreationMaster
 from .document_type_master import DocumentTypeMaster
 from .transport_entry_master import TransportEntryMaster
+from .sub_category_master import SubCategoryMaster
+from .target_entry_master import TargetEntryMaster
+from .target_entry_item import TargetEntryItem
 
 __all__ = [
     "ScrapSalesCategoryMaster",
@@ -18,4 +21,7 @@ __all__ = [
     "MailDetailsCreationMaster",
     "DocumentTypeMaster",
     "TransportEntryMaster",
+    "SubCategoryMaster",
+    "TargetEntryMaster",
+    "TargetEntryItem",
 ]
