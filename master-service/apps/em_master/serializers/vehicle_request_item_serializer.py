@@ -90,6 +90,7 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
         model = VehicleRequest
         fields = [
             "id",
+            "unique_id",
             "request_no",
             "request_date",
             "description",
@@ -97,7 +98,7 @@ class VehicleRequestSerializer(serializers.ModelSerializer):
             "request_status",
             "items",
         ]
-        read_only_fields = ["request_no", "request_date"]
+        read_only_fields = ["id", "unique_id", "request_no", "request_date"]
 
     def validate(self, attrs):
         status = attrs.get("request_status")
