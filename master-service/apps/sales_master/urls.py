@@ -6,6 +6,9 @@ from apps.sales_master.views.scrap_sales_category_master_viewset import (
 from apps.sales_master.views.item_type_master_viewset import (
     ItemTypeMasterViewSet,
 )
+from apps.sales_master.views.item_creation_viewset import (
+    ItemCreationViewSet,
+)
 
 router = DefaultRouter()
 
@@ -18,6 +21,11 @@ router.register(
     r"item-types",
     ItemTypeMasterViewSet,
     basename="item-type",
+)
+router.register(
+    r"item-creations",
+    ItemCreationViewSet,
+    basename="item-creation",
 )
 
 urlpatterns = router.urls
