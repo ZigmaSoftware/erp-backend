@@ -18,6 +18,9 @@ from apps.sales_master.views.terms_of_payment_creation_master_viewset import (
 from apps.sales_master.views.mail_details_creation_master_viewset import (
     MailDetailsCreationMasterViewSet,
 )
+from apps.sales_master.views.item_creation_viewset import (
+    ItemCreationViewSet,
+)
 
 router = DefaultRouter()
 
@@ -50,6 +53,11 @@ router.register(
     r"mail-details-creations",
     MailDetailsCreationMasterViewSet,
     basename="mail-details-creation",
+)
+router.register(
+    r"item-creations",
+    ItemCreationViewSet,
+    basename="item-creation",
 )
 
 urlpatterns = router.urls
