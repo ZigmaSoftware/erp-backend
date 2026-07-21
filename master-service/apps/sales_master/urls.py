@@ -30,6 +30,15 @@ from apps.sales_master.views.document_type_master_viewset import (
 from apps.sales_master.views.transport_entry_master_viewset import (
     TransportEntryMasterViewSet,
 )
+from apps.sales_master.views.sub_category_master_viewset import (
+    SubCategoryMasterViewSet,
+)
+from apps.sales_master.views.target_entry_master_viewset import (
+    TargetEntryMasterViewSet,
+)
+from apps.sales_master.views.target_entry_item_viewset import (
+    TargetEntryItemViewSet,
+)
 from apps.sales_master.views.rdf_inerts_perc_entry_viewset import (
     RdfInertsPercEntryViewSet,
 )
@@ -88,6 +97,21 @@ router.register(
     r"transport-entries",
     TransportEntryMasterViewSet,
     basename="transport-entry",
+)
+router.register(
+    r"sub-categories",
+    SubCategoryMasterViewSet,
+    basename="sub-category",
+)
+router.register(
+    r"target-entries",
+    TargetEntryMasterViewSet,
+    basename="target-entry",
+)
+router.register(
+    r"target-entry-items",
+    TargetEntryItemViewSet,
+    basename="target-entry-item",
 )
 router.register(
     r"rdf-inerts-perc-entries",
