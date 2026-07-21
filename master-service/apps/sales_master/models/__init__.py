@@ -8,6 +8,8 @@ from .terms_of_payment_creation_master import TermsOfPaymentCreationMaster
 from .mail_details_creation_master import MailDetailsCreationMaster
 from .document_type_master import DocumentTypeMaster
 from .transport_entry_master import TransportEntryMaster
+from .rdf_inerts_perc_entry import RdfInertsPercEntry, RdfInertsPercEntrySub
+from .icw_supplier_creation import IcwSupplierCreation
 
 __all__ = [
     "ScrapSalesCategoryMaster",
@@ -20,4 +22,7 @@ __all__ = [
     "MailDetailsCreationMaster",
     "DocumentTypeMaster",
     "TransportEntryMaster",
+    "RdfInertsPercEntry",
+    "RdfInertsPercEntrySub",
+    "IcwSupplierCreation",
 ]

@@ -30,6 +30,12 @@ from apps.sales_master.views.document_type_master_viewset import (
 from apps.sales_master.views.transport_entry_master_viewset import (
     TransportEntryMasterViewSet,
 )
+from apps.sales_master.views.rdf_inerts_perc_entry_viewset import (
+    RdfInertsPercEntryViewSet,
+)
+from apps.sales_master.views.icw_supplier_creation_viewset import (
+    IcwSupplierCreationViewSet,
+)
 
 router = DefaultRouter()
 
@@ -82,6 +88,16 @@ router.register(
     r"transport-entries",
     TransportEntryMasterViewSet,
     basename="transport-entry",
+)
+router.register(
+    r"rdf-inerts-perc-entries",
+    RdfInertsPercEntryViewSet,
+    basename="rdf-inerts-perc-entry",
+)
+router.register(
+    r"icw-supplier-creations",
+    IcwSupplierCreationViewSet,
+    basename="icw-supplier-creation",
 )
 
 urlpatterns = router.urls
