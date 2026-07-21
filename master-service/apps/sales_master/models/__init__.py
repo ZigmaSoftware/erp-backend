@@ -6,6 +6,8 @@ from .transport_medium_creation_master import TransportMediumCreationMaster
 from .terms_of_delivery_creation_master import TermsOfDeliveryCreationMaster
 from .terms_of_payment_creation_master import TermsOfPaymentCreationMaster
 from .mail_details_creation_master import MailDetailsCreationMaster
+from .document_type_master import DocumentTypeMaster
+from .transport_entry_master import TransportEntryMaster
 
 __all__ = [
     "ScrapSalesCategoryMaster",
@@ -16,4 +18,6 @@ __all__ = [
     "TermsOfDeliveryCreationMaster",
     "TermsOfPaymentCreationMaster",
     "MailDetailsCreationMaster",
+    "DocumentTypeMaster",
+    "TransportEntryMaster",
 ]
