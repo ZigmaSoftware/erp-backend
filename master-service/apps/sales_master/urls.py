@@ -12,6 +12,9 @@ from apps.sales_master.views.item_group_creation_master_viewset import (
 from apps.sales_master.views.transport_medium_creation_master_viewset import (
     TransportMediumCreationMasterViewSet,
 )
+from apps.sales_master.views.terms_of_delivery_creation_master_viewset import (
+    TermsOfDeliveryCreationMasterViewSet,
+)
 from apps.sales_master.views.terms_of_payment_creation_master_viewset import (
     TermsOfPaymentCreationMasterViewSet,
 )
@@ -36,6 +39,12 @@ from apps.sales_master.views.target_entry_master_viewset import (
 from apps.sales_master.views.target_entry_item_viewset import (
     TargetEntryItemViewSet,
 )
+from apps.sales_master.views.rdf_inerts_perc_entry_viewset import (
+    RdfInertsPercEntryViewSet,
+)
+from apps.sales_master.views.icw_supplier_creation_viewset import (
+    IcwSupplierCreationViewSet,
+)
 
 router = DefaultRouter()
 
@@ -58,6 +67,11 @@ router.register(
     r"transport-medium-creations",
     TransportMediumCreationMasterViewSet,
     basename="transport-medium-creation",
+)
+router.register(
+    r"terms-of-delivery-creations",
+    TermsOfDeliveryCreationMasterViewSet,
+    basename="terms-of-delivery-creation",
 )
 router.register(
     r"terms-of-payment-creations",
@@ -98,6 +112,16 @@ router.register(
     r"target-entry-items",
     TargetEntryItemViewSet,
     basename="target-entry-item",
+)
+router.register(
+    r"rdf-inerts-perc-entries",
+    RdfInertsPercEntryViewSet,
+    basename="rdf-inerts-perc-entry",
+)
+router.register(
+    r"icw-supplier-creations",
+    IcwSupplierCreationViewSet,
+    basename="icw-supplier-creation",
 )
 
 urlpatterns = router.urls
