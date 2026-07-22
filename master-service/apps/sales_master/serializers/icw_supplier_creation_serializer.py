@@ -49,7 +49,7 @@ class IcwSupplierCreationSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = (
             "unique_id",
-            "customer_id",
+            "supplier_id",
             "random_no",
             "random_sc",
             "created_at",
@@ -77,7 +77,7 @@ class IcwSupplierCreationSerializer(serializers.ModelSerializer):
 
         return unique_name_validator(
             Model=IcwSupplierCreation,
-            name_field="customer_name",
+            name_field="supplier_name",
             scope_fields=[],
         )(self, attrs)
 

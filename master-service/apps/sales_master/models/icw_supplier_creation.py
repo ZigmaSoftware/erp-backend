@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 
 from apps.common_master.models.city import City
@@ -21,10 +23,10 @@ class IcwSupplierCreation(BaseMaster):
         CREDIT = "credit", "Credit"
         DEBIT = "debit", "Debit"
 
-    customer_date = models.DateField()
+    supplier_date = models.DateField()
     party_type = models.CharField(max_length=10, choices=PartyType.choices)
-    customer_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
-    customer_name = models.CharField(max_length=150)
+    supplier_id = models.PositiveIntegerField(unique=True, blank=True, null=True)
+    supplier_name = models.CharField(max_length=150)
     contact_person = models.CharField(max_length=150)
 
     country_id = models.ForeignKey(
@@ -79,7 +81,7 @@ class IcwSupplierCreation(BaseMaster):
     quality_to_email = models.EmailField(blank=True, null=True)
     quality_cc_mail = models.CharField(max_length=255, blank=True, null=True)
 
-    opening_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    opening_balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal("0"))
     payment_type = models.CharField(max_length=10, choices=PaymentType.choices)
     sites = models.ManyToManyField(
         Site,
@@ -89,7 +91,6 @@ class IcwSupplierCreation(BaseMaster):
     item_name = models.CharField(max_length=150)
     executive = models.CharField(max_length=150)
     ac_group = models.CharField(max_length=150, blank=True, null=True)
-    noc_upload_status = models.BooleanField(default=False)
 
     bank_name = models.CharField(max_length=150, blank=True, null=True)
     branch = models.CharField(max_length=150, blank=True, null=True)
@@ -105,17 +106,17 @@ class IcwSupplierCreation(BaseMaster):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return self.customer_name
+        return self.supplier_name
 
     def save(self, *args, **kwargs):
-        if not self.customer_id:
-            last_customer_id = (
-                IcwSupplierCreation.objects.exclude(customer_id__isnull=True)
-                .order_by("-customer_id")
-                .values_list("customer_id", flat=True)
+        if not self.supplier_id:
+            last_supplier_id = (
+                IcwSupplierCreation.objects.exclude(supplier_id__isnull=True)
+                .order_by("-supplier_id")
+                .values_list("supplier_id", flat=True)
                 .first()
             )
-            self.customer_id = (last_customer_id or 0) + 1
+            self.supplier_id = (last_supplier_id or 0) + 1
         if not self.random_no:
             self.random_no = generate_random_no(IcwSupplierCreation)
         if not self.random_sc:
