@@ -13,6 +13,9 @@ from .target_entry_master import TargetEntryMaster
 from .target_entry_item import TargetEntryItem
 from .rdf_inerts_perc_entry import RdfInertsPercEntry, RdfInertsPercEntrySub
 from .icw_supplier_creation import IcwSupplierCreation
+from .customer_creation_master import CustomerCreationMaster
+from .customer_destination import CustomerDestination
+from .customer_item_purpose import CustomerItemPurpose
 
 __all__ = [
     "ScrapSalesCategoryMaster",
@@ -31,4 +34,7 @@ __all__ = [
     "RdfInertsPercEntry",
     "RdfInertsPercEntrySub",
     "IcwSupplierCreation",
+    "CustomerCreationMaster",
+    "CustomerDestination",
+    "CustomerItemPurpose",
 ]

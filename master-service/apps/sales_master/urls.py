@@ -45,6 +45,15 @@ from apps.sales_master.views.rdf_inerts_perc_entry_viewset import (
 from apps.sales_master.views.icw_supplier_creation_viewset import (
     IcwSupplierCreationViewSet,
 )
+from apps.sales_master.views.customer_creation_master_viewset import (
+    CustomerCreationMasterViewSet,
+)
+from apps.sales_master.views.customer_destination_viewset import (
+    CustomerDestinationViewSet,
+)
+from apps.sales_master.views.customer_item_purpose_viewset import (
+    CustomerItemPurposeViewSet,
+)
 
 router = DefaultRouter()
 
@@ -122,6 +131,21 @@ router.register(
     r"icw-supplier-creations",
     IcwSupplierCreationViewSet,
     basename="icw-supplier-creation",
+)
+router.register(
+    r"customer-creations",
+    CustomerCreationMasterViewSet,
+    basename="customer-creation",
+)
+router.register(
+    r"customer-destinations",
+    CustomerDestinationViewSet,
+    basename="customer-destination",
+)
+router.register(
+    r"customer-item-purposes",
+    CustomerItemPurposeViewSet,
+    basename="customer-item-purpose",
 )
 
 urlpatterns = router.urls
