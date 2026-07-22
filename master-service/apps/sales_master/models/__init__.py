@@ -10,6 +10,9 @@ from .transport_entry_master import TransportEntryMaster
 from .sub_category_master import SubCategoryMaster
 from .target_entry_master import TargetEntryMaster
 from .target_entry_item import TargetEntryItem
+from .customer_creation_master import CustomerCreationMaster
+from .customer_destination import CustomerDestination
+from .customer_item_purpose import CustomerItemPurpose
 
 __all__ = [
     "ScrapSalesCategoryMaster",
@@ -24,4 +27,7 @@ __all__ = [
     "SubCategoryMaster",
     "TargetEntryMaster",
     "TargetEntryItem",
+    "CustomerCreationMaster",
+    "CustomerDestination",
+    "CustomerItemPurpose",
 ]

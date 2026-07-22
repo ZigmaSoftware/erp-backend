@@ -36,6 +36,15 @@ from apps.sales_master.views.target_entry_master_viewset import (
 from apps.sales_master.views.target_entry_item_viewset import (
     TargetEntryItemViewSet,
 )
+from apps.sales_master.views.customer_creation_master_viewset import (
+    CustomerCreationMasterViewSet,
+)
+from apps.sales_master.views.customer_destination_viewset import (
+    CustomerDestinationViewSet,
+)
+from apps.sales_master.views.customer_item_purpose_viewset import (
+    CustomerItemPurposeViewSet,
+)
 
 router = DefaultRouter()
 
@@ -98,6 +107,21 @@ router.register(
     r"target-entry-items",
     TargetEntryItemViewSet,
     basename="target-entry-item",
+)
+router.register(
+    r"customer-creations",
+    CustomerCreationMasterViewSet,
+    basename="customer-creation",
+)
+router.register(
+    r"customer-destinations",
+    CustomerDestinationViewSet,
+    basename="customer-destination",
+)
+router.register(
+    r"customer-item-purposes",
+    CustomerItemPurposeViewSet,
+    basename="customer-item-purpose",
 )
 
 urlpatterns = router.urls
