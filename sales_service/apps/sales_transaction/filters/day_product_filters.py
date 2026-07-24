@@ -63,14 +63,14 @@ class AfrTransportRfqFilter(django_filters.FilterSet):
 
 
 class AggregateEntryFilter(django_filters.FilterSet):
-    site_id = django_filters.UUIDFilter()
+    site_name = django_filters.CharFilter(lookup_expr="exact")
     scrap_no = django_filters.CharFilter(lookup_expr="icontains")
     entry_date_after = django_filters.DateFilter(field_name="entry_date", lookup_expr="gte")
     entry_date_before = django_filters.DateFilter(field_name="entry_date", lookup_expr="lte")
 
     class Meta:
         model = AggregateEntryMain
-        fields = ["site_id", "scrap_no", "entry_date"]
+        fields = ["site_name", "scrap_no", "entry_date"]
 
 
 class AfrTransportEntryFilter(django_filters.FilterSet):

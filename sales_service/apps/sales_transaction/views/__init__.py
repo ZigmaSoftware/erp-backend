@@ -344,7 +344,7 @@ class AggregateEntryViewSet(viewsets.ModelViewSet):
     """Aggregate Entry (legacy scrap_entry)."""
     authentication_classes = [GatewayHeaderAuthentication]
     permission_classes = [IsAuthenticated]
-    queryset = AggregateEntryMain.objects.filter(is_deleted=False).prefetch_related("sub_items")
+    queryset = AggregateEntryMain.objects.filter(is_deleted=False)
     filterset_class = AggregateEntryFilter
     lookup_field = "unique_id"
 
