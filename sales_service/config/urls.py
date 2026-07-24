@@ -51,6 +51,9 @@ urlpatterns = [
         name="schema-redoc",
     ),
     path("v1/sales-service/", include("apps.sales_master.urls")),
+    path("v1/sales-service/", include("apps.sales_shared.urls")),
+    path("v1/sales-service/", include("apps.sales_transaction.urls")),
+    path("v1/sales-service/", include("apps.sales_approval.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

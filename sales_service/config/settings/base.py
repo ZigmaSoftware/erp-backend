@@ -41,9 +41,13 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "drf_yasg",
+    "django_filters",
 
     "apps.common_master",
+    "apps.sales_shared",
     "apps.sales_master",
+    "apps.sales_transaction",
+    "apps.sales_approval",
 ]
 
 # --------------------------------------------------
@@ -115,6 +119,11 @@ REST_FRAMEWORK = {
         "apps.common_master.authentication.header_auth.GatewayHeaderAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
     ],
     # Global pagination: limit/offset style with page metadata, 20 items per page
     "DEFAULT_PAGINATION_CLASS": "apps.common_master.pagination.LimitOffsetWithPage",
