@@ -26,6 +26,8 @@ class CustomerDestination(BaseMaster):
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.ACTIVE
     )
+    # Set by the destination approval workflow; blank means not yet approved.
+    verification_status = models.CharField(max_length=50, blank=True, default="")
 
     class Meta:
         ordering = ["-created_at"]
