@@ -22,15 +22,7 @@ class VehicleRequest(BaseMaster):
 
     description = models.CharField(max_length=300, blank=True, null=True)
 
-    staff = models.ForeignKey(
-        UserProfile,
-        on_delete=models.PROTECT,
-        related_name="vehicle_requests",
-        to_field="id",
-        db_column="staff_id",
-    )
-
-    site = models.ForeignKey(
+    site_id = models.ForeignKey(
         Site,
         on_delete=models.PROTECT,
         related_name="vehicle_requests",

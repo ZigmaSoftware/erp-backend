@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     "apps.common_master",
     "apps.em_master",
+    "apps.sales_master",
     "auth_service.apps.authentication",
 ]
 

@@ -38,18 +38,20 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class UserRoleSerializer(serializers.ModelSerializer):
     """Serializer for UserRole model."""
+    group_id = serializers.IntegerField(source="group.id", read_only=True)
     
     class Meta:
         model = UserRole
         fields = [
             "id",
+            "group_id",
             "name",
             "description",
             "is_active",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = ["id", "group_id", "created_at", "updated_at"]
     
     def validate_name(self, value):
         """Ensure role name is unique (case-insensitive)."""

@@ -21,7 +21,7 @@ class ContractorMasterViewSet(ModelViewSet):
     queryset = ContractorMaster.objects.filter(is_deleted=False)
     serializer_class = ContractorMasterSerializer
     permission_classes = [IsAuthenticated]
-    lookup_field = "id"
+    lookup_field = "unique_id"
     parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     @swagger_auto_schema(
