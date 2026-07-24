@@ -1,6 +1,6 @@
 from .base import *
 
-DEBUG = True
+DEBUG = True 
 
 SECRET_KEY = "dev-only-secret"
 
@@ -19,3 +19,5 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = ["*"]
+
+
