@@ -19,7 +19,9 @@ class NocDocument(models.Model):
     scrap_customer_id = models.UUIDField(help_text="CustomerCreationMaster unique_id")
     scrap_item_purpose_id = models.UUIDField(null=True, blank=True, help_text="CustomerItemPurpose unique_id")
     site_id = models.UUIDField(help_text="Master Service Site unique_id")
-    noc_doc_type_id = models.UUIDField(help_text="DocumentTypeMaster unique_id")
+    noc_doc_type_id = models.UUIDField(
+        null=True, blank=True, help_text="DocumentTypeMaster unique_id"
+    )
     dispose_type = models.CharField(max_length=50, blank=True, default="")
     customer_destination = models.CharField(max_length=255, blank=True, default="")
     entry_date = models.DateField(null=True, blank=True)

@@ -48,6 +48,8 @@ class CustomerItemPurpose(BaseMaster):
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.ACTIVE
     )
+    # Set by the item/disposal verification workflow; blank means not yet verified.
+    verification_status = models.CharField(max_length=50, blank=True, default="")
 
     class Meta:
         ordering = ["-created_at"]
