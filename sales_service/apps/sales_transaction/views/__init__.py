@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 
 from apps.common_master.authentication.header_auth import GatewayHeaderAuthentication
 from apps.sales_transaction.models.work_order import WorkOrderMain
@@ -270,13 +271,17 @@ class ScrapQuotationViewSet(viewsets.ModelViewSet):
 class NocDocumentViewSet(viewsets.ModelViewSet):
     authentication_classes = [GatewayHeaderAuthentication]
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     queryset = NocDocument.objects.filter(is_deleted=False)
     serializer_class = NocDocumentSerializer
     filterset_class = NocDocumentFilter
     lookup_field = "unique_id"
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.headers.get("X-Username", ""))
+        serializer.save(
+            created_by=self.request.headers.get("X-Username", ""),
+            staff_id=self.request.headers.get("X-Username", ""),
+        )
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.headers.get("X-Username", ""))

@@ -15,6 +15,10 @@ from apps.sales_approval.services.afr_transport_approval import AfrTransportAppr
 from apps.sales_approval.services.receivable_approval import ReceivableApprovalService
 from apps.sales_approval.services.noc_verification import NocVerificationService
 from apps.sales_shared.serializers import ApprovalHistorySerializer
+from apps.sales_master.models.customer_creation_master import CustomerCreationMaster
+from apps.sales_transaction.models.noc_document import NocDocument
+from apps.sales_transaction.serializers.day_product import NocDocumentSerializer
+from shared.master_service import resolve_site_names
 
 
 class CustomerApprovalViewSet(GenericViewSet):
@@ -210,6 +214,39 @@ class NocVerificationViewSet(GenericViewSet):
 
     def _user(self, request):
         return request.headers.get("X-User-Id", ""), request.headers.get("X-Username", "")
+
+    @action(detail=False, methods=["get"], url_path="verification-list")
+    def verification_list(self, request):
+        """Return only files submitted from NOC Upload for verification."""
+        queryset = (
+            NocDocument.objects.filter(
+                is_deleted=False,
+                document_file__isnull=False,
+            )
+            .exclude(document_file="")
+            .order_by("-created_at")
+        )
+
+        data = NocDocumentSerializer(
+            queryset,
+            many=True,
+            context={"request": request},
+        ).data
+
+        customer_ids = {item["scrap_customer_id"] for item in data}
+        customer_names = {
+            str(c.unique_id): c.customer_name
+            for c in CustomerCreationMaster.objects.filter(unique_id__in=customer_ids)
+        }
+
+        site_ids = {item["site_id"] for item in data if item.get("site_id")}
+        site_names = resolve_site_names(site_ids, request)
+
+        for item in data:
+            item["customer_name"] = customer_names.get(item["scrap_customer_id"], "")
+            item["site_name"] = site_names.get(item.get("site_id", ""), "")
+
+        return Response(data)
 
     @action(detail=True, methods=["post"], url_path="approve")
     def approve(self, request, **kwargs):

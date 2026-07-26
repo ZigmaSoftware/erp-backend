@@ -147,6 +147,11 @@ JWT_PUBLIC_KEY_PATH = os.getenv(
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
 
+# --------------------------------------------------
+# SERVICE URLs (for inter-service HTTP calls)
+# --------------------------------------------------
+MASTER_SERVICE_API_URL = os.getenv("MASTER_SERVICE_API_URL", "http://127.0.0.1:8002")
+
 
 # --------------------------------------------------
 # SWAGGER / OPENAPI (drf-yasg)

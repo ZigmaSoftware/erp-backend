@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 from rest_framework import serializers
@@ -116,7 +117,7 @@ class NocDocumentSerializer(serializers.ModelSerializer):
     class Meta:
         model = NocDocument
         fields = "__all__"
-        read_only_fields = ["unique_id", "created_at", "updated_at"]
+        read_only_fields = ["unique_id", "created_at", "updated_at", "document_hash"]
 
     def validate_document_file(self, value):
         if not value:
@@ -129,6 +130,56 @@ class NocDocumentSerializer(serializers.ModelSerializer):
                 "Unsupported file type. Allowed: jpg, jpeg, png, pdf."
             )
         return value
+
+    def create(self, validated_data):
+        """Create one verification row per submitted file, idempotently.
+
+        The upload dialog can be submitted again after a network timeout. A
+        matching active file for the same customer/item/document type is
+        returned instead of creating a duplicate verification record.
+        """
+        document_file = validated_data.get("document_file")
+        if document_file:
+            document_name = validated_data.get("document_name") or getattr(document_file, "name", "")
+            validated_data["document_name"] = document_name
+            document_hash = self._document_hash(document_file)
+            validated_data["document_hash"] = document_hash
+
+            duplicate = NocDocument.objects.filter(
+                scrap_customer_id=validated_data.get("scrap_customer_id"),
+                scrap_item_purpose_id=validated_data.get("scrap_item_purpose_id"),
+                site_id=validated_data.get("site_id"),
+                noc_doc_type_id=validated_data.get("noc_doc_type_id"),
+                dispose_type=validated_data.get("dispose_type", ""),
+                customer_destination=validated_data.get("customer_destination", ""),
+                document_hash=document_hash,
+                is_deleted=False,
+                document_file__isnull=False,
+            ).exclude(document_file="").first()
+            if duplicate:
+                return duplicate
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        document_file = validated_data.get("document_file")
+        if document_file:
+            validated_data["document_hash"] = self._document_hash(document_file)
+        return super().update(instance, validated_data)
+
+    @staticmethod
+    def _document_hash(document_file):
+        digest = hashlib.sha256()
+        current_position = document_file.tell() if hasattr(document_file, "tell") else 0
+        if hasattr(document_file, "seek"):
+            document_file.seek(0)
+        try:
+            for chunk in document_file.chunks():
+                digest.update(chunk)
+        finally:
+            if hasattr(document_file, "seek"):
+                document_file.seek(current_position)
+        return digest.hexdigest()
 
 
 class DailyTargetDisposalSubSerializer(serializers.ModelSerializer):
