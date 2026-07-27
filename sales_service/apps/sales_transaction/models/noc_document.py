@@ -30,9 +30,11 @@ class NocDocument(models.Model):
 
     document_name = models.CharField(max_length=255, blank=True, default="")
     document_file = models.FileField(upload_to="noc_documents/%Y/%m/", blank=True, null=True)
+    document_hash = models.CharField(max_length=64, blank=True, default="", db_index=True)
 
     approve_status = models.CharField(max_length=10, choices=ApproveStatus.choices, default=ApproveStatus.PENDING)
     approve_staff_id = models.CharField(max_length=40, blank=True, default="")
+    approve_staff_name = models.CharField(max_length=150, blank=True, default="")
     approve_date = models.DateField(null=True, blank=True)
     reason = models.TextField(blank=True, default="")
 

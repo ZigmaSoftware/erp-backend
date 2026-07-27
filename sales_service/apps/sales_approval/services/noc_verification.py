@@ -20,9 +20,11 @@ class NocVerificationService:
             )
             noc.approve_status = action_status
             noc.approve_staff_id = str(approver_id)
+            noc.approve_staff_name = str(approver_name or "")
             noc.approve_date = timezone.now().date()
             noc.save(update_fields=[
-                "approve_status", "approve_staff_id", "approve_date", "updated_at",
+                "approve_status", "approve_staff_id", "approve_staff_name",
+                "approve_date", "updated_at",
             ])
 
             NocDocumentApprovalHistory.objects.create(

@@ -147,6 +147,15 @@ JWT_PUBLIC_KEY_PATH = os.getenv(
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
 
+# --------------------------------------------------
+# SERVICE URLs (for inter-service HTTP calls)
+#
+# Must match the master-service port it's actually run on (see
+# MASTER_SERVICE_URL in erp-backend/.env / erp-backend/Procfile - keep
+# these in sync, they point at the same process).
+# --------------------------------------------------
+MASTER_SERVICE_API_URL = os.getenv("MASTER_SERVICE_API_URL", "http://127.0.0.1:8002")
+
 
 # --------------------------------------------------
 # SWAGGER / OPENAPI (drf-yasg)

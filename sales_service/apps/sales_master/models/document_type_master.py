@@ -1,23 +1,25 @@
 from django.db import models
-from django.db.models import Q
 
 from shared.base_models import BaseMaster
 
 
 class DocumentTypeMaster(BaseMaster):
 
+    class DisposalType(models.TextChoices):
+        CUSTOMER_SCOPE = "customer_scope", "Customer Scope"
+        ZIGMA_SCOPE = "zigma_scope", "Zigma Scope"
+        TRANSPORT_SCOPE = "transport_scope", "Transport Scope"
+
+    disposal_type = models.CharField(
+        max_length=20,
+        choices=DisposalType.choices,
+        default=DisposalType.CUSTOMER_SCOPE,
+    )
     doc_type = models.CharField(max_length=150)
     description = models.TextField(blank=True, null=True)
 
     class Meta:
         ordering = ["doc_type"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["doc_type"],
-                condition=Q(is_deleted=False),
-                name="uq_doc_type_name_active"
-            ),
-        ]
 
     def __str__(self):
         return self.doc_type

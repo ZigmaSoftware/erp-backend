@@ -16,10 +16,16 @@ class SiteViewSet(ModelViewSet):
     CRUD operations for Site.
     """
 
-    queryset = Site.objects.filter(is_deleted=False)
+    queryset = Site.objects.all()
     serializer_class = SiteSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "unique_id"
+
+    def get_queryset(self):
+        qs = Site.objects.all()
+        if self.request.query_params.get("include_deleted") != "true":
+            qs = qs.filter(is_deleted=False)
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(

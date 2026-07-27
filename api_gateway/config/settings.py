@@ -25,9 +25,27 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 # --------------------------------------------------
 # Service URLs
+#
+# One entry per backend microservice. The key is the URL slug used
+# by both the gateway route (gateway/urls.py) and the frontend
+# (erp-frontend src/helpers/admin/endpoints.ts) - e.g. requests to
+# /api/<key>/... are proxied to SERVICE_URLS[<key>].
+#
+# To add a new service: add one line here (backed by its own env
+# var so the port can be changed without touching code), then one
+# path() line in gateway/urls.py. No new proxy class needed.
 # --------------------------------------------------
-MASTER_SERVICE_URL = os.getenv("MASTER_SERVICE_URL", "http://127.0.0.1:8002")
-AUTH_SERVICE_URL = os.getenv("AUTH_SERVICE_URL", "http://127.0.0.1:8001")
+SERVICE_URLS = {
+    "auth-service": os.getenv("AUTH_SERVICE_URL", "http://127.0.0.1:8001"),
+    "master-service": os.getenv("MASTER_SERVICE_URL", "http://127.0.0.1:8002"),
+    "sales-service": os.getenv("SALES_SERVICE_URL", "http://127.0.0.1:8003"),
+}
+
+# Back-compat aliases (some code may still read these directly).
+AUTH_SERVICE_URL = SERVICE_URLS["auth-service"]
+MASTER_SERVICE_URL = SERVICE_URLS["master-service"]
+SALES_SERVICE_URL = SERVICE_URLS["sales-service"]
+
 PROXY_TIMEOUT = int(os.getenv("PROXY_TIMEOUT", "10"))
 
 # --------------------------------------------------
