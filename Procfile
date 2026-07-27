@@ -8,5 +8,5 @@
 
 gateway: cd api_gateway && python manage.py runserver 0.0.0.0:8000
 auth:    cd auth_service && python manage.py runserver 0.0.0.0:8001
-master:  cd master-service && python manage.py runserver 0.0.0.0:8003
-sales:   cd sales_service && python manage.py runserver 0.0.0.0:8004
+master:  cd master-service && python manage.py runserver 0.0.0.0:8002
+sales:   cd sales_service && python manage.py runserver 0.0.0.0:8003

@@ -37,8 +37,8 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 # --------------------------------------------------
 SERVICE_URLS = {
     "auth-service": os.getenv("AUTH_SERVICE_URL", "http://127.0.0.1:8001"),
-    "master-service": os.getenv("MASTER_SERVICE_URL", "http://127.0.0.1:8003"),
-    "sales-service": os.getenv("SALES_SERVICE_URL", "http://127.0.0.1:8004"),
+    "master-service": os.getenv("MASTER_SERVICE_URL", "http://127.0.0.1:8002"),
+    "sales-service": os.getenv("SALES_SERVICE_URL", "http://127.0.0.1:8003"),
 }
 
 # Back-compat aliases (some code may still read these directly).
